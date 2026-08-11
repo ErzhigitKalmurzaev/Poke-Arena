@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Outfit } from "next/font/google";
+import { AppProviders } from "@/shared/lib/providers/AppProviders";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -31,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ru"
       className={`${outfit.variable} ${manrope.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }
