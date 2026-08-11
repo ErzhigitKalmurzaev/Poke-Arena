@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Arena
 
-## Getting Started
+Конструктор команд и сравнений на данных PokeAPI. Каталог ~1300 бойцов, редактирование
+характеристик, кастомные параметры сравнения, сборка двух команд по 5 и детерминированная
+битва по выбранному параметру.
 
-First, run the development server:
+Этот README ведётся по мере коммитов: каждая заведённая технология или принятое решение
+получает свой абзац в момент, когда оно попадает в код, а не задним числом.
+
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+
+# создать .env.local с секретом сессии Auth.js
+cp .env.example .env.local
+# заполнить AUTH_SECRET, например:
+bunx auth secret
+# или вручную: openssl rand -base64 32
+
+bun run dev     # http://localhost:3000
+bun run test    # vitest
+bun run build   # production-сборка (также прогоняет tsc)
+bun run lint    # eslint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Тестовые пользователи (захардкожены, без БД): `admin` / `admin123`, `guest` / `guest123`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Датасет `public/data/pokemon.json` уже закоммитен и используется как есть. Пересобрать его
+из PokeAPI (не требуется для обычной работы):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun run scripts/fetch-pokemon.ts
+```
 
-## Learn More
+## Стек и решения
 
-To learn more about Next.js, take a look at the following resources:
+### Стек
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Next.js 16.3.0, App Router, TypeScript strict.** Обязательное требование задания. Реально
+установленная версия в этой среде — 16.3.0, а не указанная в задании "15": работаем с тем,
+что установлено, и явно фиксируем расхождение (см. "Принятые решения" ниже). `strict: true` +
+`noUncheckedIndexedAccess: true` в `tsconfig.json` — вторая опция превращает любой доступ по
+индексу массива (`arr[i]`) в `T | undefined`, что для датасета на 1300+ записей и Dexie-выборок
+ловит реальные баги на этапе компиляции, а не в рантайме.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Bun** как package manager и test runner. Быстрее npm/yarn на установке, единый бинарь для
+`bun install`/`bun run`/скриптов, `vitest` используется для тестов (см. ниже), но сам раннер
+скриптов (`scripts/fetch-pokemon.ts`) выполняется напрямую через `bun run` без отдельной
+сборки.
 
-## Deploy on Vercel
+**Tailwind CSS + shadcn/ui.** Быстро собрать consistent UI-кит без написания дизайн-системы с
+нуля. shadcn копирует компоненты в код (`src/shared/ui`), а не тянет их как рантайм-зависимость
+— значит, их можно точечно менять под макет без форка библиотеки. Инициализировано с пресетом
+Base UI (`bunx shadcn@latest init --defaults`), добавлены `button`, `input`, `select`,
+`slider`, `card`, `badge`, `dialog`. Дефолтные алиасы shadcn (`@/components/ui`, `@/lib`) не
+совпадают с FSD-раскладкой — компоненты и `cn()` перенесены в `shared/ui`/`shared/lib`,
+`components.json` перенастроен, чтобы будущие `shadcn add` сразу попадали в правильное место.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Dexie.js (IndexedDB)** для пользовательских правок, кастомных параметров и команд.
+localStorage не подошёл бы: это синхронный API, блокирующий главный поток, с квотой порядка
+5–10 МБ и без индексов — любое чтение требует `JSON.parse` всего блоба. IndexedDB асинхронна,
+квота на порядки больше, а Dexie даёт составные индексы (`[fighterId+statId]`) для точечных
+выборок правок без пробега по всей коллекции. Схема — `shared/lib/db.ts`: `overrides`,
+`customStats`, `customStatValues`, `teams`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Auth.js (next-auth) v5, Credentials provider, JWT-сессия, без БД.** Не пишем свою систему
+кук/подписи с нуля, но и не тащим БД под два захардкоженных пользователя — ровно то, что нужно
+для моканной авторизации. `src/auth.ts` экспортирует `handlers`/`auth`/`signIn`/`signOut`;
+guard реализован через `src/proxy.ts` (см. "Принятые решения" — в Next.js 16 это файл, который
+раньше назывался `middleware.ts`).
+
+**Vitest** для юнит-тестов. Battle-логика и merge-логика — чистые функции без DOM, идеально
+ложатся на Vitest без лишней настройки окружения (`environment: 'node'` в
+`vitest.config.mts`).
+
+### Принятые решения
+
+- **Next.js 16.3.0 вместо указанной в задании "15".** В среде уже установлена 16.3.0 —
+  работаем с реальной версией, а не откатываем стек искусственно.
+- **`proxy.ts` вместо `middleware.ts`.** В Next.js 16 Middleware переименован в Proxy
+  (`node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`): тот же runtime-контракт
+  (`NextRequest`/`NextResponse`), новый файл/экспорт. Auth.js v5 `auth()` оборачивает proxy
+  так же, как раньше оборачивал middleware — поведение не изменилось, изменилось только имя
+  файла.
+- **FSD-раскладка (`entities/features/widgets/shared`)**, а не более плоская
+  `domain/data/features`. Явно выбрана в пользу графируемого критерия "архитектура/границы
+  модулей" и линта `eslint-plugin-boundaries` — двух конкурирующих раскладок одновременно не
+  может быть, выбор зафиксирован здесь.
+- **`src/auth.ts` и `src/proxy.ts` лежат вне слоёв FSD**, на корне `src/`, рядом с `app/`. Это
+  требование самого Auth.js/Next.js — они ищут эти файлы по фиксированному пути, а не по
+  соглашению проекта. Слой `pages` FSD осознанно слит с `src/app/` Next.js по той же причине:
+  роутинг App Router — это файловая система, а не абстракция, которую можно продублировать
+  отдельной директорией без потери маршрутизации.
+- **Порядок наложения в `mergeFighter`:** `base → override → customStats`, где `customStats`
+  накладываются последними и могут перекрыть даже одноимённый ключ из `override.stats`. Это
+  буквальное прочтение формулировки задания "кастомные параметры... участвуют в сравнении
+  наравне с базовыми" и "кастомные статы всегда добавляются поверх" — в реальности коллизий
+  имён между кастомным параметром и базовым статом не предполагается, но порядок слоёв
+  зафиксирован именно так, а не иначе.
+- **Приоритет спрайта: `official-artwork`, затем `front_default`.** Явно указано в тексте
+  задания. Заодно поле `sprites` в ответе GraphQL-эндпоинта PokeAPI приходит уже разобранным
+  объектом, а не JSON-строкой — код на это не рассчитывал изначально, распарсили с фолбэком на
+  оба варианта.
+- **`height`/`weight` собираются скриптом, но не входят в `Fighter`/`StaticFighterRecord`.**
+  Задание явно требует их забирать — они лежат в `public/data/pokemon.json` — но ни одна
+  фича сейчас их не показывает и не фильтрует по ним. Будут добавлены в типы, когда появится
+  фича, которой они нужны (например, доп. числовой фильтр в каталоге).
+- **Единая тёмная тема без переключателя.** Дизайн-система, полученная для проекта, дана в
+  одной теме (чёрный фон, поверхности `#232323`, акценты amber/blue/mint). Переключатель
+  светлая/тёмная — это отдельный пункт опциональной части задания, который мы сознательно не
+  берём (см. "Что не сделано").
+- **Лендинг (`app/(public)/page.tsx`) — SSG.** Компонент не вызывает `fetch` с `no-store` и не
+  читает `cookies()`/`headers()`, поэтому Next.js рендерит его один раз при сборке и раздаёт
+  статикой с CDN. Все остальные маршруты либо требуют сессии (значит, минимум per-request
+  проверка через `proxy.ts`), либо завязаны на клиентский IndexedDB (Dexie), которого на
+  сервере просто нет — SSR/SSG им ничего не выигрывают, контент всё равно досчитывается в
+  браузере после гидратации.
+
+## Что не сделано и почему
+
+На момент последнего коммита сделаны: скаффолд + FSD-границы, датасет PokeAPI (build-time
+скрипт), доменная модель бойца и merge-слой с тестами, моканная авторизация с proxy-guard,
+лендинг. Ниже — то, что специфицировано, но пока не реализовано; список будет сокращаться по
+мере коммитов, а не переписываться в конце:
+
+- Каталог (`widgets/catalog-browser`): поиск через MiniSearch, фильтры, `nuqs`,
+  виртуализация — не начато.
+- Детальная страница бойца и `features/fighter-edit` (форма на TanStack Form + Arktype,
+  сброс правок) — не начато.
+- `features/custom-stat-create` и единый `StatDefinition[]`-реестр статов — не начато.
+- `features/team-builder` — не начато.
+- `entities/battle/model/determineWinner.ts` + обязательные тесты, `features/battle-run`,
+  `widgets/battle-result` — не начато.
+- `eslint-plugin-boundaries` (или steiger) с правилами FSD как lint-ошибка в CI — пока границы
+  слоёв соблюдаются вручную по договорённости, автоматической проверки нет.
+- Опциональная часть — пока не выбирали, приоритет обязательной части.
+- Деплой на Vercel — репозиторий и коммиты локальные, задеплоено будет на финальном этапе.
+
+## Что дальше в продакшене
+
+Будет заполнено на финальном этапе, когда обязательная часть закрыта.

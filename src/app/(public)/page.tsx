@@ -1,68 +1,51 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { staticFighters } from '@/shared/api/static-dataset';
 
-export default function Home() {
+const FACTS = [
+  { label: 'Каталог', value: `${staticFighters.length} бойцов` },
+  { label: 'Правки', value: 'Статы, имя, описание' },
+  { label: 'Битвы', value: 'Команды 5×5' },
+];
+
+// This route reads no cookies()/headers() and does no fetch({ cache: 'no-store' }) -
+// nothing here is per-request, so Next renders it once at build time (SSG) and
+// serves it from the CDN for every visitor.
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex flex-1 flex-col">
+      <header className="flex items-center justify-between px-6 py-6 sm:px-10">
+        <span className="font-heading text-xl font-semibold">Arena</span>
+        <Link
+          href="/login"
+          className="rounded-full bg-brand-amber px-6 py-2.5 text-sm font-semibold text-black"
+        >
+          Войти
+        </Link>
+      </header>
+
+      <main className="flex flex-1 flex-col items-center justify-center gap-10 px-6 py-20 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <p className="font-heading text-2xl font-light text-white/60 italic">Собери. Прокачай.</p>
+          <h1 className="font-heading text-6xl font-semibold tracking-tight sm:text-7xl">Arena</h1>
+          <p className="max-w-lg text-base leading-relaxed text-white/60">
+            Каталог бойцов на данных PokeAPI, редактируемые характеристики со сбросом к
+            оригиналу, свои параметры сравнения и командные битвы, которые решает чистая
+            детерминированная функция.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <Link href="/login" className="rounded-full bg-brand-amber px-8 py-4 text-base font-semibold text-black">
+          Начать
+        </Link>
+
+        <dl className="grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-3">
+          {FACTS.map((fact) => (
+            <div key={fact.label} className="rounded-3xl bg-card p-6">
+              <dt className="font-mono text-xs tracking-wide text-white/40">{fact.label.toUpperCase()}</dt>
+              <dd className="mt-2 font-heading text-lg font-semibold">{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
       </main>
     </div>
   );
