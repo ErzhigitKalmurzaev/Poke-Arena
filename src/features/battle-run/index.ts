@@ -3,4 +3,5 @@ export { buildBattleTimeline, timelineDurationMs, STEP_MS, type BattleStep } fro
 export { resolveTeamFighters } from './model/resolveTeamFighters';
 export { useBattlePlayback, type BattlePlayback } from './model/useBattlePlayback';
 export { useBattleRun } from './model/useBattleRun';
+export { ComparisonStatSelect } from './ui/ComparisonStatSelect';
 export { RunBattleButton } from './ui/RunBattleButton';
