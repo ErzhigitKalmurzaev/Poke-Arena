@@ -2,6 +2,7 @@
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useMemo, useRef } from 'react';
 import { BASE_STAT_REGISTRY } from '@/entities/stat';
 import { FighterCard, getAllFighters, type Fighter } from '@/entities/fighter';
@@ -132,7 +133,11 @@ export function CatalogBrowser() {
                     className="absolute top-0 left-0 grid w-full grid-cols-4 gap-4 pb-4"
                     style={{ height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
                   >
-                    {rows[virtualRow.index]?.map((fighter) => <FighterCard key={fighter.id} fighter={fighter} />)}
+                    {rows[virtualRow.index]?.map((fighter) => (
+                      <Link key={fighter.id} href={`/fighter/${fighter.id}`}>
+                        <FighterCard fighter={fighter} />
+                      </Link>
+                    ))}
                   </div>
                 ))}
               </div>

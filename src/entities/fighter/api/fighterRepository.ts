@@ -45,15 +45,32 @@ export async function getAllFighters(): Promise<Fighter[]> {
   });
 }
 
+async function loadCustomStatsFor(id: string): Promise<Record<string, number>> {
+  const customValues = await db.customStatValues.where('fighterId').equals(id).toArray();
+  return Object.fromEntries(customValues.map((value) => [value.statId, value.value]));
+}
+
 export async function getFighterById(id: string): Promise<Fighter | null> {
   const base = baseFightersById.get(id);
   if (!base) return null;
 
-  const [override, customValues] = await Promise.all([
-    db.overrides.get(id),
-    db.customStatValues.where('fighterId').equals(id).toArray(),
-  ]);
-  const customStats = Object.fromEntries(customValues.map((value) => [value.statId, value.value]));
+  const [override, customStats] = await Promise.all([db.overrides.get(id), loadCustomStatsFor(id)]);
 
   return mergeFighter(base, override, customStats);
+}
+
+/**
+ * The fighter as it would be with no user override at all - custom stats
+ * still apply (resetting an override doesn't touch those), but name/
+ * description/stats fall back to the immutable PokeAPI snapshot. Used to
+ * diff a submitted edit against the true baseline rather than against
+ * whatever override already existed, so re-saving after a previous edit
+ * doesn't silently drop fields the user isn't touching this time.
+ */
+export async function getBaseFighterById(id: string): Promise<Fighter | null> {
+  const base = baseFightersById.get(id);
+  if (!base) return null;
+
+  const customStats = await loadCustomStatsFor(id);
+  return mergeFighter(base, undefined, customStats);
 }
