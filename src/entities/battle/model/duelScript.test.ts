@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Fighter } from '@/entities/fighter';
 import { determineDuelWinner } from './determineWinner';
+import { TOTAL_STAT_ID } from './statScore';
 import { buildDuelScript, powersAfter } from './duelScript';
 
 function fighter(id: string, stats: Record<string, number>, types: string[] = ['fire']): Fighter {
@@ -19,9 +20,13 @@ function fighter(id: string, stats: Record<string, number>, types: string[] = ['
   };
 }
 
-/** Builds the script the arena would play for these two, via the real duel result. */
-function scriptFor(a: Fighter | undefined, b: Fighter | undefined) {
-  const duel = determineDuelWinner(0, a, b);
+/**
+ * Builds the script the arena would play for these two, via the real duel
+ * result. Compared on the sum of everything, which is what makes the fixtures
+ * below (whole stat blocks, not one key) meaningful.
+ */
+function scriptFor(a: Fighter | undefined, b: Fighter | undefined, statId: string = TOTAL_STAT_ID) {
+  const duel = determineDuelWinner(0, a, b, statId);
   return { duel, script: buildDuelScript(duel, a, b) };
 }
 

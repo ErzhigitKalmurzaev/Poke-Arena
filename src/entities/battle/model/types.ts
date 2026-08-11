@@ -10,6 +10,8 @@ export interface DuelOutcome {
 }
 
 export interface BattleOutcome {
+  /** Which comparison parameter this battle was decided on - see fighterStatScore. */
+  statId: string;
   duels: DuelOutcome[];
   winsA: number;
   winsB: number;
