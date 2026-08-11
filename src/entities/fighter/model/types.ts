@@ -1,12 +1,3 @@
-export type StatSource = 'base' | 'custom';
-
-export interface StatDefinition {
-  id: string;
-  label: string;
-  source: StatSource;
-  unit?: string;
-}
-
 export interface Fighter {
   id: string;
   name: string;
@@ -14,5 +5,9 @@ export interface Fighter {
   types: string[];
   stats: Record<string, number>;
   sprite: string;
+  shinySprite: string | null;
+  cryUrl: string | null;
+  isLegendary: boolean;
+  isMythical: boolean;
   isEdited: boolean;
 }

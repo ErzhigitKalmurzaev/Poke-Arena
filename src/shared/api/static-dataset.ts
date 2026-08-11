@@ -7,6 +7,14 @@ export interface StaticFighterRecord {
   types: string[];
   stats: Record<string, number>;
   sprite: string | null;
+  shinySprite: string | null;
+  cryUrl: string | null;
+  height: number;
+  weight: number;
+  captureRate: number;
+  baseHappiness: number;
+  isLegendary: boolean;
+  isMythical: boolean;
 }
 
 /**
