@@ -4,3 +4,4 @@ export { TONE_BG, TONE_HEX, TONE_TEXT, toneOfTypes, toneRgba } from './model/ton
 export { battleStatTotal } from './model/battleStats';
 export { getAllFighters, getFighterById } from './api/fighterRepository';
 export { FighterCard } from './ui/FighterCard';
+export { FighterMedia } from './ui/FighterMedia';
