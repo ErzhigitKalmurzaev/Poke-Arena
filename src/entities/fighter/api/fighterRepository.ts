@@ -1,5 +1,6 @@
 import { db } from '@/shared/lib/db';
 import { staticFighters, type StaticFighterRecord } from '@/shared/api/static-dataset';
+import { toComparableStats } from '../model/comparableStats';
 import { mergeFighter, type BaseFighter } from '../model/merge';
 import type { Fighter } from '../model/types';
 
@@ -14,18 +15,7 @@ function toBaseFighter(record: StaticFighterRecord): BaseFighter {
     cryUrl: record.cryUrl,
     isLegendary: record.isLegendary,
     isMythical: record.isMythical,
-    // height/weight/captureRate/baseHappiness live as their own typed
-    // fields on the static record, not inside `stats` - folding them in
-    // here (rather than in the static type) is what makes them
-    // comparable via mergeFighter/statRegistry without the static
-    // dataset itself having to know "these are stats".
-    stats: {
-      ...record.stats,
-      height: record.height,
-      weight: record.weight,
-      captureRate: record.captureRate,
-      baseHappiness: record.baseHappiness,
-    },
+    stats: toComparableStats(record),
   };
 }
 

@@ -28,6 +28,9 @@ export function toneOfTypes(types: string[]): FighterTone {
   return TYPE_TONE[types[0] ?? 'normal'] ?? 'mint';
 }
 
+// The canonical list of PokeAPI types, in the same order as above.
+export const ALL_FIGHTER_TYPES: string[] = Object.keys(TYPE_TONE);
+
 export const TONE_BG: Record<FighterTone, string> = {
   red: 'bg-brand-red',
   blue: 'bg-brand-blue',
