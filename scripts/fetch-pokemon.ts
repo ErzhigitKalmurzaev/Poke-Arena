@@ -27,7 +27,14 @@ const QUERY = /* GraphQL */ `
       pokemon_v2_pokemonsprites {
         sprites
       }
+      pokemon_v2_pokemoncries {
+        cries
+      }
       pokemon_v2_pokemonspecy {
+        capture_rate
+        base_happiness
+        is_legendary
+        is_mythical
         pokemon_v2_pokemonspeciesflavortexts(where: { language_id: { _eq: 9 } }, limit: 1) {
           flavor_text
         }
@@ -49,7 +56,12 @@ interface RawPokemon {
   pokemon_v2_pokemonstats: { base_stat: number; pokemon_v2_stat: { name: string } }[];
   pokemon_v2_pokemontypes: { pokemon_v2_type: { name: string } }[];
   pokemon_v2_pokemonsprites: { sprites: Record<string, unknown> }[];
+  pokemon_v2_pokemoncries: { cries: Record<string, unknown> }[];
   pokemon_v2_pokemonspecy: {
+    capture_rate: number | null;
+    base_happiness: number | null;
+    is_legendary: boolean;
+    is_mythical: boolean;
     pokemon_v2_pokemonspeciesflavortexts: { flavor_text: string }[];
   } | null;
 }
@@ -71,6 +83,12 @@ interface NormalizedFighter {
   types: string[];
   stats: Record<string, number>;
   sprite: string | null;
+  shinySprite: string | null;
+  cryUrl: string | null;
+  captureRate: number;
+  baseHappiness: number;
+  isLegendary: boolean;
+  isMythical: boolean;
 }
 
 async function fetchBatch(limit: number, offset: number) {
@@ -107,21 +125,34 @@ function cleanFlavorText(text: string): string {
     .trim();
 }
 
-function extractSprite(sprites: Record<string, unknown> | undefined): string | null {
-  // The GraphQL endpoint's jsonb `sprites` column comes back as a plain
-  // object over HTTP, but treat a JSON-encoded string defensively too.
-  const parsed = typeof sprites === 'string' ? (JSON.parse(sprites) as Record<string, unknown>) : sprites;
-  if (!parsed) return null;
+// The GraphQL endpoint's jsonb columns (sprites, cries) come back as plain
+// objects over HTTP, but parse a JSON-encoded string defensively too.
+function parseJsonish(value: Record<string, unknown> | undefined): Record<string, unknown> | null {
+  if (!value) return null;
+  return typeof value === 'string' ? (JSON.parse(value) as Record<string, unknown>) : value;
+}
+
+function extractSprites(sprites: Record<string, unknown> | undefined): { sprite: string | null; shinySprite: string | null } {
+  const parsed = parseJsonish(sprites);
+  if (!parsed) return { sprite: null, shinySprite: null };
 
   const other = parsed.other as Record<string, unknown> | undefined;
   const officialArtwork = other?.['official-artwork'] as Record<string, unknown> | undefined;
-  const officialArtworkFront = officialArtwork?.front_default as string | undefined;
-  const frontDefault = parsed.front_default as string | undefined;
-  return officialArtworkFront ?? frontDefault ?? null;
+  const frontDefault = (officialArtwork?.front_default as string | undefined) ?? (parsed.front_default as string | undefined);
+  const frontShiny = (officialArtwork?.front_shiny as string | undefined) ?? (parsed.front_shiny as string | undefined);
+  return { sprite: frontDefault ?? null, shinySprite: frontShiny ?? null };
+}
+
+function extractCryUrl(cries: Record<string, unknown> | undefined): string | null {
+  const parsed = parseJsonish(cries);
+  if (!parsed) return null;
+  return (parsed.latest as string | undefined) ?? (parsed.legacy as string | undefined) ?? null;
 }
 
 function normalize(raw: RawPokemon): NormalizedFighter {
-  const flavorText = raw.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesflavortexts[0]?.flavor_text;
+  const species = raw.pokemon_v2_pokemonspecy;
+  const flavorText = species?.pokemon_v2_pokemonspeciesflavortexts[0]?.flavor_text;
+  const { sprite, shinySprite } = extractSprites(raw.pokemon_v2_pokemonsprites[0]?.sprites);
 
   return {
     id: String(raw.id),
@@ -131,7 +162,13 @@ function normalize(raw: RawPokemon): NormalizedFighter {
     weight: raw.weight,
     types: raw.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name),
     stats: Object.fromEntries(raw.pokemon_v2_pokemonstats.map((s) => [s.pokemon_v2_stat.name, s.base_stat])),
-    sprite: extractSprite(raw.pokemon_v2_pokemonsprites[0]?.sprites),
+    sprite,
+    shinySprite,
+    cryUrl: extractCryUrl(raw.pokemon_v2_pokemoncries[0]?.cries),
+    captureRate: species?.capture_rate ?? 0,
+    baseHappiness: species?.base_happiness ?? 0,
+    isLegendary: species?.is_legendary ?? false,
+    isMythical: species?.is_mythical ?? false,
   };
 }
 
