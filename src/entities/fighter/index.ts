@@ -9,5 +9,4 @@ export { fighterRating } from './model/rating';
 export { toComparableStats } from './model/comparableStats';
 export { getAllFighters, getBaseFighterById, getFighterById } from './api/fighterRepository';
 export { FighterCard } from './ui/FighterCard';
-export { FighterHeader } from './ui/FighterHeader';
 export { FighterMedia } from './ui/FighterMedia';
