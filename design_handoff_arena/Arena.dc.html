@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #000; color: #FFF; font-family: Manrope, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #FFB444; text-decoration: none; }
+  a:hover { color: #B2FFE2; }
+  *:focus-visible { outline: 2px solid #ADDAEE; outline-offset: 3px; }
+  @keyframes rise { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes race { from { width: 0 } to { width: var(--w) } }
+  @keyframes impact { 0% { transform: scale(1.3); opacity: 0 } 55% { transform: scale(.98); opacity: 1 } 100% { transform: scale(1); opacity: 1 } }
+  @keyframes goldring { 0%,100% { box-shadow: 0 0 0 1px #FFB444, 0 0 36px rgba(255,180,68,.16) } 50% { box-shadow: 0 0 0 1px #FFB444, 0 0 64px rgba(255,180,68,.34) } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
+</style>
+</helmet>
+
+<div style="min-width:1280px;background:#000">
+
+  <header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:16px 40px;background:rgba(0,0,0,.75);backdrop-filter:blur(18px)">
+    <a href="Лендинг.dc.html" style="width:40px;height:40px;border-radius:14px;background:#232323;display:grid;place-items:center;color:rgba(255,255,255,.8);font-size:17px">←</a>
+    <span style="font-family:Outfit,sans-serif;font-size:20px;font-weight:600;margin-right:20px">Arena</span>
+    <nav style="display:flex;gap:6px;padding:5px;border-radius:999px;background:#232323;font-size:13.5px">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7">
+        <a href="{{ n.href }}" style="padding:9px 17px;border-radius:999px;color:{{ n.color }};background:{{ n.bg }};font-weight:500">{{ n.label }}</a>
+      </sc-for>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">СОСТАВ 6/6</span>
+      <a href="#battle" style="padding:11px 22px;border-radius:999px;background:#FFB444;color:#000;font-size:13.5px;font-weight:600">Начать бой</a>
+      <span style="width:40px;height:40px;border-radius:14px;background:#B2FFE2;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#000">EK</span>
+    </div>
+  </header>
+
+  <section id="select" data-screen-label="Выбор бойца" style="padding:40px 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:28px;align-items:stretch">
+      <div style="position:relative;border-radius:36px;background:#232323;padding:44px;overflow:hidden;min-height:620px">
+        <div style="position:absolute;left:-70px;top:180px;width:340px;height:340px;border-radius:50%;background:#000"></div>
+        <div style="position:relative">
+          <div style="font-family:Outfit,sans-serif;font-size:28px;font-weight:300;font-style:italic;color:rgba(255,255,255,.6)">Выбери своего</div>
+          <h1 style="margin:6px 0 0;font-family:Outfit,sans-serif;font-size:66px;font-weight:600;line-height:.98;letter-spacing:-.035em">бойца</h1>
+          <p style="margin:18px 0 0;max-width:330px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.55);text-wrap:pretty">В покедексе {{ rosterCount }} бойцов. Фильтруй по стихии, смотри статы и отправляй в состав.</p>
+        </div>
+        <div style="position:absolute;left:44px;bottom:44px">
+          <div style="display:flex;flex-wrap:wrap;gap:7px;max-width:290px">
+            <sc-for list="{{ typeChips }}" as="t" hint-placeholder-count="8">
+              <span style="padding:8px 14px;border-radius:999px;background:{{ t.bg }};color:{{ t.color }};font-family:'IBM Plex Mono',monospace;font-size:11px">{{ t.label }}</span>
+            </sc-for>
+          </div>
+          <div style="margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.4)">НАЙДЕНО {{ foundCount }} · СОРТ ПО СУММЕ</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <sc-for list="{{ selectCards }}" as="f" hint-placeholder-count="6">
+          <div style="border-radius:28px;overflow:hidden;background:{{ f.bg }};transition:transform 240ms" style-hover="transform:translateY(-8px)">
+            <div style="position:relative;height:222px;background:repeating-linear-gradient(135deg,rgba(0,0,0,.07) 0 10px,transparent 10px 20px);display:grid;place-items:center">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:{{ f.slotTone }}">АРТ БОЙЦА</span>
+              <span style="position:absolute;top:14px;right:16px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ f.slotTone }}">{{ f.id }}</span>
+            </div>
+            <div style="padding:18px 20px 20px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <span style="font-family:Outfit,sans-serif;font-size:24px;font-weight:600;color:{{ f.ink }}">{{ f.name }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:{{ f.inkSoft }}">{{ f.total }}</span>
+              </div>
+              <div style="display:flex;gap:7px;margin-top:12px">
+                <span style="padding:6px 12px;border-radius:999px;background:{{ f.chipBg }};font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ f.ink }}">{{ f.typeA }}</span>
+                <span style="padding:6px 12px;border-radius:999px;background:{{ f.chipBg }};font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ f.ink }}">ЭВО {{ f.evo }}</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="catalog" data-screen-label="Покедекс" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:26px">
+      <h2 style="margin:0;font-family:Outfit,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.03em">Покедекс</h2>
+      <div style="display:flex;gap:8px;font-size:13.5px">
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Сумма статов 380—720</div>
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Только с правками</div>
+        <div style="padding:11px 18px;border-radius:999px;background:#FFF;color:#000;font-weight:600">Сетка</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px">
+      <sc-for list="{{ fighters }}" as="f" hint-placeholder-count="12">
+        <div style="border-radius:24px;background:#232323;padding:14px;transition:transform 220ms;animation:rise 380ms both;animation-delay:{{ f.delay }}" style-hover="transform:translateY(-6px)">
+          <div style="position:relative;height:132px;border-radius:18px;background:{{ f.tint }};display:grid;place-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(0,0,0,.4)">АРТ</span>
+            <sc-if value="{{ f.edited }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;top:10px;left:10px;padding:4px 9px;border-radius:999px;background:#000;color:#FFB444;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em">ИЗМЕНЁН</span>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:13px">
+            <span style="font-family:Outfit,sans-serif;font-size:19px;font-weight:600">{{ f.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.4)">{{ f.id }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:11px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">HP</span><span>{{ f.hp }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">СП.А</span><span>{{ f.spa }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">АТК</span><span>{{ f.atk }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">СП.З</span><span>{{ f.spd }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">ЗАЩ</span><span>{{ f.def }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.42)">СКР</span><span>{{ f.spe }}</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);font-family:'IBM Plex Mono',monospace;font-size:11.5px">
+            <span style="color:rgba(255,255,255,.42)">СУММА</span><span style="font-weight:600;color:{{ f.accent }}">{{ f.total }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:18px;padding:20px 24px;border-radius:22px;background:#232323;font-size:14px;color:rgba(255,255,255,.5)">Пустое состояние · Под эти фильтры бойцов нет — ослабь диапазон.</div>
+  </section>
+
+  <section id="fighter" data-screen-label="Досье бойца" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1.08fr 1fr;gap:28px;align-items:stretch">
+      <div style="position:relative;border-radius:36px;overflow:hidden;background:#232323;min-height:660px;display:flex;flex-direction:column">
+        <div style="position:relative;flex:1;background:radial-gradient(65% 60% at 50% 42%, rgba(255,180,68,.22), transparent 72%);display:grid;place-items:center">
+          <div style="width:74%;height:78%;border-radius:28px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.055) 0 10px,transparent 10px 20px);display:grid;place-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.36)">АРТ БОЙЦА · 1024×1024</span>
+          </div>
+          <span style="position:absolute;bottom:-6px;left:0;right:0;text-align:center;font-family:Outfit,sans-serif;font-size:106px;font-weight:700;letter-spacing:-.04em;color:rgba(255,255,255,.05)">{{ hero.name }}</span>
+        </div>
+        <div style="position:relative;padding:0 44px 40px;text-align:center">
+          <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:54px;font-weight:600;letter-spacing:-.03em">{{ hero.name }}</h1>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+            <span style="padding:8px 16px;border-radius:999px;background:#FFB444;color:#000;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600">{{ hero.typeA }}</span>
+            <span style="padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.09);font-family:'IBM Plex Mono',monospace;font-size:12px">{{ hero.typeB }}</span>
+            <span style="padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.09);font-family:'IBM Plex Mono',monospace;font-size:12px">УР. {{ hero.level }}</span>
+          </div>
+          <p style="margin:18px auto 0;max-width:520px;font-size:15px;line-height:1.62;color:rgba(255,255,255,.6);text-wrap:pretty">{{ hero.description }}</p>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:26px">
+            <div style="padding:15px 28px;border-radius:999px;background:#FFF;color:#000;font-size:14.5px;font-weight:600">Добавить в состав</div>
+            <a href="#tune" style="padding:15px 28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:#FFF;font-size:14.5px;font-weight:600">Открыть прокачку</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="border-radius:32px;background:#232323;padding:32px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <span style="font-family:Outfit,sans-serif;font-size:24px;font-weight:600">Базовые параметры</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(255,255,255,.55)">СУММА <span style="color:#FFB444;font-weight:600">{{ hero.total }}</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:15px;margin-top:24px">
+            <sc-for list="{{ hero.bars }}" as="s" hint-placeholder-count="6">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px">
+                  <span style="color:rgba(255,255,255,.6)">{{ s.label }}</span>
+                  <span style="font-weight:600">{{ s.value }}</span>
+                </div>
+                <div style="margin-top:7px;height:8px;border-radius:999px;background:rgba(255,255,255,.08)">
+                  <div style="height:100%;border-radius:999px;background:{{ s.tone }};--w:{{ s.pct }};width:{{ s.pct }};animation:race 620ms cubic-bezier(.15,.85,.2,1) both"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border-radius:32px;background:#232323;padding:32px">
+          <div style="font-family:Outfit,sans-serif;font-size:24px;font-weight:600">Линия эволюции</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:20px">
+            <sc-for list="{{ evolution }}" as="e" hint-placeholder-count="3">
+              <div style="flex:1;border-radius:22px;padding:16px;text-align:center;background:{{ e.bg }};border:1px solid {{ e.border }}">
+                <div style="height:78px;border-radius:14px;background:{{ e.slot }}"></div>
+                <div style="margin-top:12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:600;color:{{ e.ink }}">{{ e.name }}</div>
+                <div style="margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ e.meta }}">{{ e.note }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <sc-for list="{{ heroFacts }}" as="k" hint-placeholder-count="3">
+            <div style="border-radius:24px;background:#232323;padding:22px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.42)">{{ k.label }}</div>
+              <div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:{{ k.tone }}">{{ k.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tune" data-screen-label="Прокачка" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:26px">
+      <div>
+        <h2 style="margin:0;font-family:Outfit,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.03em">Прокачка бойца</h2>
+        <p style="margin:10px 0 0;font-size:15px;color:rgba(255,255,255,.55)">Правки лежат слоем выше базы — оригинальный снимок не перезаписывается.</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="padding:14px 20px;border-radius:20px;background:#B2FFE2;color:#000">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:rgba(0,0,0,.6)">СВОБОДНЫХ ОЧКОВ</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">7</div>
+        </div>
+        <div style="padding:14px 20px;border-radius:20px;background:#232323">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:rgba(255,255,255,.45)">ОПЫТ ДО УР.36</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">4120 / 6000</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start">
+      <div style="border-radius:32px;background:#232323;padding:26px">
+        <div style="height:212px;border-radius:22px;background:#FFB444;display:grid;place-items:center">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:rgba(0,0,0,.45)">АРТ БОЙЦА</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:18px">
+          <span style="font-family:Outfit,sans-serif;font-size:28px;font-weight:600">{{ hero.name }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">{{ hero.id }}</span>
+        </div>
+        <div style="margin-top:20px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">
+          <span>УР. 34</span><span>69%</span>
+        </div>
+        <div style="margin-top:9px;height:10px;border-radius:999px;background:rgba(255,255,255,.08)">
+          <div style="width:69%;height:100%;border-radius:999px;background:#FFB444"></div>
+        </div>
+        <div style="margin-top:22px;padding:18px;border-radius:20px;background:#000;font-size:14px;line-height:1.55;color:rgba(255,255,255,.62)">Эволюция откроется на уровне 36. Правки статов и кастомные параметры перенесутся на следующую ступень.</div>
+      </div>
+
+      <div style="border-radius:32px;background:#232323;padding:32px">
+        <div style="display:grid;grid-template-columns:132px 1fr 136px 132px;gap:18px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.08);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:rgba(255,255,255,.42)">
+          <span>ПАРАМЕТР</span><span>РАСПРЕДЕЛЕНИЕ</span><span style="text-align:right">БАЗА → ИТОГ</span><span style="text-align:right">ОЧКИ</span>
+        </div>
+        <sc-for list="{{ tuneRows }}" as="r" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:132px 1fr 136px 132px;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">{{ r.label }}</span>
+            <div style="position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.08)">
+              <div style="position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:rgba(255,255,255,.5);width:{{ r.basePct }}"></div>
+              <div style="position:absolute;top:0;bottom:0;border-radius:999px;background:#B2FFE2;left:{{ r.basePct }};width:{{ r.addPct }}"></div>
+            </div>
+            <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px">
+              <span style="color:rgba(255,255,255,.4)">{{ r.base }}</span>
+              <span style="color:rgba(255,255,255,.28)"> → </span>
+              <span style="font-weight:600;color:{{ r.tone }}">{{ r.final }}</span>
+            </div>
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:9px">
+              <span style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:rgba(255,255,255,.7)">−</span>
+              <span style="min-width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ r.points }}</span>
+              <span style="width:30px;height:30px;border-radius:50%;background:#B2FFE2;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#000">+</span>
+            </div>
+          </div>
+        </sc-for>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.45)">ИМЯ БОЙЦА</div>
+            <div style="margin-top:10px;padding:14px 18px;border-radius:16px;background:#000;font-size:14.5px">{{ hero.name }}</div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.45)">КАСТОМНЫЙ ПАРАМЕТР</div>
+            <div style="display:flex;gap:9px;margin-top:10px">
+              <div style="flex:1;padding:14px 18px;border-radius:16px;background:#000;font-size:14.5px;color:#FFB444">Выносливость · 68</div>
+              <div style="width:50px;border-radius:16px;background:rgba(255,255,255,.08);display:grid;place-items:center;font-size:18px;color:rgba(255,255,255,.7)">+</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:28px">
+          <div style="padding:15px 28px;border-radius:999px;background:#FFB444;color:#000;font-size:14.5px;font-weight:600">Сохранить правки</div>
+          <div style="padding:15px 28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:14.5px;font-weight:600;color:#FFF">Сбросить правки</div>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(255,255,255,.38)">СОХРАНЯЕТСЯ ЛОКАЛЬНО · INDEXEDDB</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="team" data-screen-label="Состав" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:26px">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.42)">РАУНД 01 — СОСТАВ</div>
+        <h2 style="margin:10px 0 0;font-family:Outfit,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.03em">Сборка составов</h2>
+      </div>
+      <div style="display:flex;gap:8px;font-size:13.5px">
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Случайный состав</div>
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Очистить</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="border-radius:32px;background:#232323;padding:28px;border:1px solid rgba(255,180,68,.5)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-family:Outfit,sans-serif;font-size:30px;font-weight:600;color:#FFB444">{{ teamAName }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.55)">6/6 · СУММА {{ totalA }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:20px">
+          <sc-for list="{{ teamA }}" as="f" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:28px 46px 1fr auto;gap:14px;align-items:center;padding:11px 14px;border-radius:18px;background:#000">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.35)">{{ f.slot }}</span>
+              <span style="height:38px;border-radius:12px;background:{{ f.tint }}"></span>
+              <span>
+                <span style="display:block;font-family:Outfit,sans-serif;font-size:16px;font-weight:600">{{ f.name }}</span>
+                <span style="display:block;margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.4)">{{ f.typeA }} · {{ f.id }}</span>
+              </span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ f.total }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:32px;background:#232323;padding:28px;border:1px solid rgba(173,218,238,.5)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-family:Outfit,sans-serif;font-size:30px;font-weight:600;color:#ADDAEE">{{ teamBName }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.55)">4/6 · СУММА {{ totalB }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:20px">
+          <sc-for list="{{ teamB }}" as="f" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:28px 46px 1fr auto;gap:14px;align-items:center;padding:11px 14px;border-radius:18px;background:#000">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.35)">{{ f.slot }}</span>
+              <span style="height:38px;border-radius:12px;background:{{ f.tint }}"></span>
+              <span>
+                <span style="display:block;font-family:Outfit,sans-serif;font-size:16px;font-weight:600">{{ f.name }}</span>
+                <span style="display:block;margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.4)">{{ f.typeA }} · {{ f.id }}</span>
+              </span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ f.total }}</span>
+            </div>
+          </sc-for>
+          <div style="padding:16px;border-radius:18px;border:1px dashed rgba(255,255,255,.18);font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(255,255,255,.35)">05 · ПУСТОЙ СЛОТ — ВЫБЕРИ БОЙЦА</div>
+          <div style="padding:16px;border-radius:18px;border:1px dashed rgba(255,255,255,.18);font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(255,255,255,.35)">06 · ПУСТОЙ СЛОТ — ВЫБЕРИ БОЙЦА</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+        <span style="font-family:Outfit,sans-serif;font-size:20px;font-weight:600">Скамейка</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(255,255,255,.35)">ПЕРЕТАЩИ В СЛОТ ИЛИ НАЖМИ A / B</span>
+      </div>
+      <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px">
+        <sc-for list="{{ bench }}" as="f" hint-placeholder-count="7">
+          <div style="flex:0 0 186px;border-radius:24px;background:#232323;padding:14px">
+            <div style="height:86px;border-radius:16px;background:{{ f.tint }}"></div>
+            <div style="margin-top:12px;font-family:Outfit,sans-serif;font-size:17px;font-weight:600">{{ f.name }}</div>
+            <div style="display:flex;justify-content:space-between;margin-top:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.42)">
+              <span>{{ f.id }}</span><span>{{ f.total }}</span>
+            </div>
+            <div style="display:flex;gap:7px;margin-top:12px">
+              <span style="flex:1;text-align:center;padding:8px;border-radius:999px;background:#FFB444;color:#000;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">A</span>
+              <span style="flex:1;text-align:center;padding:8px;border-radius:999px;background:#ADDAEE;color:#000;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">B</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="battle" data-screen-label="Битва" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <div style="border-radius:40px;overflow:hidden;background:#232323">
+      <div style="position:relative;background:#000;padding:34px 40px 30px">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:52%;background:radial-gradient(60% 70% at 34% 46%, rgba(255,180,68,.22), transparent 72%)"></div>
+        <div style="position:absolute;right:0;top:0;bottom:0;width:52%;background:radial-gradient(60% 70% at 66% 46%, rgba(173,218,238,.22), transparent 72%)"></div>
+        <h2 style="position:relative;margin:0;text-align:center;font-family:Outfit,sans-serif;font-size:44px;font-weight:600;letter-spacing:-.03em">Арена</h2>
+        <div style="position:relative;display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:20px;margin-top:24px">
+          <div style="height:280px;border-radius:28px;background:repeating-linear-gradient(135deg,rgba(255,180,68,.16) 0 10px,transparent 10px 20px);display:grid;place-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.4)">АРТ КОМАНДЫ A</span>
+          </div>
+          <div style="display:grid;place-items:center">
+            <div style="width:76px;height:76px;border-radius:24px;background:#232323;display:grid;place-items:center;font-family:Outfit,sans-serif;font-size:22px;font-weight:600;color:rgba(255,255,255,.75)">V/S</div>
+          </div>
+          <div style="height:280px;border-radius:28px;background:repeating-linear-gradient(135deg,rgba(173,218,238,.16) 0 10px,transparent 10px 20px);display:grid;place-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.4)">АРТ КОМАНДЫ B</span>
+          </div>
+        </div>
+        <div style="position:relative;display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:20px;margin-top:20px">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="width:32px;height:32px;border-radius:11px;background:#FFB444"></span>
+              <span style="font-family:Outfit,sans-serif;font-size:19px;font-weight:600">{{ teamAName }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">СУММА {{ statSumA }}</span>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:12px">
+              <sc-for list="{{ segsA }}" as="s" hint-placeholder-count="12">
+                <span style="flex:1;height:12px;border-radius:3px;background:{{ s.bg }}"></span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.42)">{{ statLabel }}</div>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">СУММА {{ statSumB }}</span>
+              <span style="font-family:Outfit,sans-serif;font-size:19px;font-weight:600">{{ teamBName }}</span>
+              <span style="width:32px;height:32px;border-radius:11px;background:#ADDAEE"></span>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:12px">
+              <sc-for list="{{ segsB }}" as="s" hint-placeholder-count="12">
+                <span style="flex:1;height:12px;border-radius:3px;background:{{ s.bg }}"></span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:32px 40px 40px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:24px">
+          <span style="font-family:Outfit,sans-serif;font-size:26px;font-weight:600">Выбери параметр</span>
+          <div style="display:flex;gap:7px">
+            <sc-for list="{{ statChips }}" as="c" hint-placeholder-count="6">
+              <div style="padding:10px 16px;border-radius:999px;background:{{ c.bg }};color:{{ c.color }};font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500">{{ c.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:26px">
+          <sc-for list="{{ duels }}" as="d" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:20px;padding:12px 16px;border-radius:20px;background:#000">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="min-width:112px;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)">{{ d.aName }}</span>
+                <span style="min-width:34px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ d.aTone }}">{{ d.aVal }}</span>
+                <div style="flex:1;height:14px;border-radius:999px;background:rgba(255,255,255,.07)">
+                  <div style="height:100%;border-radius:999px;background:{{ d.aFill }};--w:{{ d.aPct }};width:{{ d.aPct }};animation:race 640ms cubic-bezier(.15,.85,.2,1) both;animation-delay:{{ d.delay }}"></div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:6px;border-radius:999px;background:rgba(255,255,255,.06);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:{{ d.tagTone }}">{{ d.tag }}</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="flex:1;height:14px;border-radius:999px;background:rgba(255,255,255,.07);display:flex;justify-content:flex-end">
+                  <div style="height:100%;border-radius:999px;background:{{ d.bFill }};--w:{{ d.bPct }};width:{{ d.bPct }};animation:race 640ms cubic-bezier(.15,.85,.2,1) both;animation-delay:{{ d.delay }}"></div>
+                </div>
+                <span style="min-width:34px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ d.bTone }}">{{ d.bVal }}</span>
+                <span style="min-width:112px;text-align:right;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)">{{ d.bName }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;place-items:center;margin-top:28px">
+          <div style="padding:17px 44px;border-radius:999px;background:#FFB444;color:#000;font-size:15px;font-weight:600">Запустить бой</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" data-screen-label="Результат" style="padding:0 40px 72px;max-width:1560px;margin:0 auto">
+    <h2 style="margin:0 0 22px;font-family:Outfit,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.03em">Итог боя</h2>
+    <div style="display:grid;grid-template-columns:1fr 260px 1fr;align-items:center;gap:20px">
+      <div style="border-radius:34px;background:#232323;padding:34px;border:1px solid {{ winner.border }};animation:{{ winner.anim }}">
+        <div style="display:inline-block;padding:7px 15px;border-radius:999px;background:#FFB444;color:#000;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em">{{ winner.label }}</div>
+        <div style="margin-top:16px;font-family:Outfit,sans-serif;font-size:60px;font-weight:600;line-height:1;letter-spacing:-.03em;color:{{ winner.color }}">{{ winner.name }}</div>
+        <div style="margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.6)">ВЫИГРАНО РАУНДОВ {{ winner.wins }} · СУММА {{ winner.sum }}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:Outfit,sans-serif;font-size:92px;font-weight:700;line-height:1;letter-spacing:-.04em;animation:impact 520ms cubic-bezier(.2,.8,.2,1) both">{{ score }}</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.42)">СЧЁТ РАУНДОВ</div>
+      </div>
+      <div style="border-radius:34px;background:#232323;padding:34px;text-align:right;opacity:{{ loser.opacity }}">
+        <div style="display:inline-block;padding:7px 15px;border-radius:999px;background:rgba(255,255,255,.08);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:rgba(255,255,255,.6)">{{ loser.label }}</div>
+        <div style="margin-top:16px;font-family:Outfit,sans-serif;font-size:60px;font-weight:600;line-height:1;letter-spacing:-.03em;color:{{ loser.color }}">{{ loser.name }}</div>
+        <div style="margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.5)">ВЫИГРАНО РАУНДОВ {{ loser.wins }} · СУММА {{ loser.sum }}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:20px">
+      <sc-for list="{{ duels }}" as="d" hint-placeholder-count="6">
+        <div style="border-radius:24px;background:#232323;padding:20px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:rgba(255,255,255,.4)">{{ d.tag }}</div>
+          <div style="margin-top:12px;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.8)">{{ d.aName }}</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600">
+            <span style="color:{{ d.aTone }}">{{ d.aVal }}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.3)">/</span>
+            <span style="color:{{ d.bTone }}">{{ d.bVal }}</span>
+          </div>
+          <div style="margin-top:6px;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.8)">{{ d.bName }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <div style="padding:15px 28px;border-radius:999px;background:#FFB444;color:#000;font-size:14.5px;font-weight:600">Ещё бой</div>
+      <div style="padding:15px 28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:14.5px;font-weight:600">Сменить параметр</div>
+      <div style="padding:15px 28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:14.5px;font-weight:600">Сохранить в историю</div>
+    </div>
+  </section>
+
+  <section id="history" data-screen-label="История боёв" style="padding:0 40px 100px;max-width:1560px;margin:0 auto">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:24px">
+      <div>
+        <h2 style="margin:0;font-family:Outfit,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.03em">История боёв</h2>
+        <p style="margin:10px 0 0;font-size:15px;color:rgba(255,255,255,.5)">24 записи в локальной базе</p>
+      </div>
+      <div style="display:flex;gap:8px;font-size:13.5px">
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Экспорт JSON</div>
+        <div style="padding:11px 18px;border-radius:999px;background:#232323;color:rgba(255,255,255,.75)">Очистить</div>
+      </div>
+    </div>
+    <div style="border-radius:30px;overflow:hidden;background:#232323">
+      <div style="display:grid;grid-template-columns:150px 1fr 1fr 150px 90px 130px;gap:18px;padding:16px 26px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:rgba(255,255,255,.42)">
+        <span>ДАТА</span><span>СОСТАВ A</span><span>СОСТАВ B</span><span>ПАРАМЕТР</span><span style="text-align:right">СЧЁТ</span><span style="text-align:right">ИТОГ</span>
+      </div>
+      <sc-for list="{{ history }}" as="h" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:150px 1fr 1fr 150px 90px 130px;gap:18px;padding:17px 26px;border-top:1px solid rgba(255,255,255,.06);font-family:'IBM Plex Mono',monospace;font-size:12.5px" style-hover="background:rgba(255,255,255,.03)">
+          <span style="color:rgba(255,255,255,.45)">{{ h.date }}</span>
+          <span style="color:rgba(255,255,255,.85)">{{ h.a }}</span>
+          <span style="color:rgba(255,255,255,.85)">{{ h.b }}</span>
+          <span style="color:rgba(255,255,255,.55)">{{ h.stat }}</span>
+          <span style="text-align:right;font-weight:600">{{ h.score }}</span>
+          <span style="text-align:right;color:{{ h.tone }}">{{ h.winner }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(255,255,255,.32)">БАЗА БОЙЦОВ — СНИМОК ПОКЕДЕКСА · ПРАВКИ И ИСТОРИЯ — ОТДЕЛЬНЫЙ СЛОЙ В INDEXEDDB</div>
+  </section>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;battleStat&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;hp&quot;,&quot;atk&quot;,&quot;def&quot;,&quot;spa&quot;,&quot;spd&quot;,&quot;spe&quot;],&quot;default&quot;:&quot;spe&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Битва&quot;},&quot;teamAName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Острие&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Битва&quot;},&quot;teamBName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Затмение&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Битва&quot;}}">
+const AMBER = '#FFB444', BLUE = '#ADDAEE', MINT = '#B2FFE2', WHITE = '#FFF', SURFACE = '#232323';
+const MUTED = 'rgba(255,255,255,0.42)';
+
+const STATS = [
+  { key: 'hp', label: 'HP' },
+  { key: 'atk', label: 'АТАКА' },
+  { key: 'def', label: 'ЗАЩИТА' },
+  { key: 'spa', label: 'СП.АТАКА' },
+  { key: 'spd', label: 'СП.ЗАЩИТА' },
+  { key: 'spe', label: 'СКОРОСТЬ' },
+];
+
+const ROSTER = [
+  { id: '#041', name: 'Фламбер', typeA: 'ПЛАМЯ', typeB: 'ГНЕВ', evo: 3, hp: 84, atk: 148, def: 96, spa: 132, spd: 88, spe: 121, edited: true },
+  { id: '#017', name: 'Тидрак', typeA: 'ПРИЛИВ', typeB: 'СТАЛЬ', evo: 3, hp: 112, atk: 118, def: 134, spa: 96, spd: 120, spe: 74, edited: false },
+  { id: '#092', name: 'Вердал', typeA: 'ПОБЕГ', typeB: 'ЗЕМЛЯ', evo: 2, hp: 128, atk: 104, def: 118, spa: 88, spd: 112, spe: 66, edited: false },
+  { id: '#008', name: 'Вольтир', typeA: 'РАЗРЯД', typeB: 'ВЕТЕР', evo: 2, hp: 72, atk: 96, def: 68, spa: 152, spd: 84, spe: 158, edited: true },
+  { id: '#134', name: 'Гранитон', typeA: 'КАМЕНЬ', typeB: 'ЗЕМЛЯ', evo: 3, hp: 146, atk: 138, def: 172, spa: 54, spd: 108, spe: 38, edited: false },
+  { id: '#203', name: 'Ноктюрн', typeA: 'ТЕНЬ', typeB: 'ПСИ', evo: 2, hp: 88, atk: 82, def: 92, spa: 148, spd: 126, spe: 112, edited: false },
+  { id: '#076', name: 'Люмира', typeA: 'СВЕТ', typeB: 'ПСИ', evo: 3, hp: 94, atk: 68, def: 86, spa: 164, spd: 138, spe: 104, edited: false },
+  { id: '#151', name: 'Фростан', typeA: 'ИНЕЙ', typeB: 'СТАЛЬ', evo: 2, hp: 108, atk: 126, def: 148, spa: 92, spd: 116, spe: 58, edited: true },
+  { id: '#119', name: 'Токсара', typeA: 'ТОКСИН', typeB: 'ТЕНЬ', evo: 3, hp: 96, atk: 112, def: 84, spa: 138, spd: 94, spe: 128, edited: false },
+  { id: '#065', name: 'Аэриск', typeA: 'ВЕТЕР', typeB: 'ПОБЕГ', evo: 2, hp: 78, atk: 108, def: 72, spa: 116, spd: 82, spe: 166, edited: false },
+  { id: '#188', name: 'Псиора', typeA: 'ПСИ', typeB: 'СВЕТ', evo: 3, hp: 86, atk: 74, def: 78, spa: 158, spd: 132, spe: 118, edited: false },
+  { id: '#224', name: 'Феррокс', typeA: 'СТАЛЬ', typeB: 'КАМЕНЬ', evo: 3, hp: 132, atk: 156, def: 158, spa: 68, spd: 96, spe: 62, edited: false },
+];
+
+const HISTORY_TAIL = [
+  { date: '11.08 · 17:02', a: 'Острие', b: 'Полуночь', stat: 'СП.АТАКА', score: '2:4', win: 'B' },
+  { date: '10.08 · 22:41', a: 'Кузня', b: 'Затмение', stat: 'ЗАЩИТА', score: '5:1', win: 'A' },
+  { date: '10.08 · 20:15', a: 'Острие', b: 'Кузня', stat: 'HP', score: '3:3', win: 'НИЧЬЯ' },
+  { date: '09.08 · 19:58', a: 'Полуночь', b: 'Острие', stat: 'АТАКА', score: '1:5', win: 'B' },
+  { date: '09.08 · 12:33', a: 'Кузня', b: 'Полуночь', stat: 'СКОРОСТЬ', score: '4:2', win: 'A' },
+];
+
+const TINTS = [AMBER, BLUE, MINT];
+const total = (f) => f.hp + f.atk + f.def + f.spa + f.spd + f.spe;
+const pct = (v, max) => Math.round((v / max) * 100) + '%';
+
+class Component extends DCLogic {
+  renderVals() {
+    const statKey = this.props.battleStat ?? 'spe';
+    const stat = STATS.find((s) => s.key === statKey) ?? STATS[5];
+    const teamAName = this.props.teamAName ?? 'Острие';
+    const teamBName = this.props.teamBName ?? 'Затмение';
+
+    const fighters = ROSTER.map((f, i) => ({
+      ...f,
+      total: total(f),
+      tint: TINTS[i % 3],
+      accent: TINTS[i % 3],
+      delay: 35 * i + 'ms',
+    }));
+
+    const selectCards = fighters.slice(0, 6).map((f, i) => {
+      const dark = i === 3;
+      return {
+        ...f,
+        bg: dark ? '#000' : f.tint,
+        ink: dark ? WHITE : '#000',
+        inkSoft: dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.6)',
+        chipBg: dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.12)',
+        slotTone: dark ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.42)',
+      };
+    });
+
+    const hero = { ...fighters[0], level: 34 };
+    hero.description =
+      'Ударный профиль: высокая атака и спец-атака при средней защите. Забирает короткие раунды, проседает в затяжных — очки в защиту закрывают провал, но снимают темп.';
+    hero.bars = STATS.map((s, i) => ({
+      label: s.label,
+      value: hero[s.key],
+      pct: pct(hero[s.key], 200),
+      tone: hero[s.key] >= 140 ? AMBER : hero[s.key] >= 100 ? MINT : 'rgba(255,255,255,.6)',
+    }));
+
+    const evolution = [
+      { name: 'Фламик', note: 'СТУПЕНЬ 1', bg: '#000', border: 'rgba(255,255,255,.08)', ink: 'rgba(255,255,255,.7)', meta: 'rgba(255,255,255,.35)', slot: 'repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 8px,transparent 8px 16px)' },
+      { name: 'Фламбер', note: 'ТЕКУЩАЯ · УР.34', bg: AMBER, border: AMBER, ink: '#000', meta: 'rgba(0,0,0,.55)', slot: 'repeating-linear-gradient(135deg,rgba(0,0,0,.1) 0 8px,transparent 8px 16px)' },
+      { name: 'Закрыто', note: 'ОТКРОЕТСЯ НА УР.36', bg: '#000', border: 'rgba(255,255,255,.14)', ink: 'rgba(255,255,255,.4)', meta: 'rgba(255,255,255,.28)', slot: 'repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 8px,transparent 8px 16px)' },
+    ];
+
+    const heroFacts = [
+      { label: 'РОСТ', value: '1.7 м', tone: WHITE },
+      { label: 'ВЕС', value: '90.5 кг', tone: WHITE },
+      { label: 'БОЁВ · ПОБЕД', value: '27 · 18', tone: MINT },
+    ];
+
+    const tuneRows = STATS.map((s, i) => {
+      const points = [0, 2, 3, 0, 2, 0][i];
+      const base = hero[s.key];
+      return {
+        label: s.label,
+        base,
+        final: base + points * 6,
+        points,
+        tone: points > 0 ? MINT : WHITE,
+        basePct: pct(base, 220),
+        addPct: pct(points * 6, 220),
+      };
+    });
+
+    const teamA = fighters.slice(0, 6).map((f, i) => ({ ...f, slot: '0' + (i + 1) }));
+    const byId = (id) => fighters.find((f) => f.id === id);
+    const bTeam = ['#076', '#224', '#151', '#119', '#065', '#188'].map(byId);
+    const teamB = bTeam.slice(0, 4).map((f, i) => ({ ...f, slot: '0' + (i + 1) }));
+    const bench = fighters.slice(4, 11);
+
+    const maxVal = Math.max(...fighters.map((f) => f[stat.key]));
+    const duels = teamA.map((a, i) => {
+      const b = bTeam[i];
+      const aWin = a[stat.key] >= b[stat.key];
+      return {
+        aName: a.name,
+        bName: b.name,
+        aVal: a[stat.key],
+        bVal: b[stat.key],
+        aPct: pct(a[stat.key], maxVal),
+        bPct: pct(b[stat.key], maxVal),
+        aFill: aWin ? AMBER : 'rgba(255,180,68,.3)',
+        bFill: aWin ? 'rgba(173,218,238,.3)' : BLUE,
+        aTone: aWin ? AMBER : MUTED,
+        bTone: aWin ? MUTED : BLUE,
+        tag: 'РАУНД 0' + (i + 1),
+        tagTone: aWin ? AMBER : BLUE,
+        delay: 80 * i + 'ms',
+      };
+    });
+
+    const sum = (list) => list.reduce((acc, f) => acc + f[stat.key], 0);
+    const sumA = sum(teamA);
+    const sumB = sum(bTeam);
+    const winsA = duels.filter((d) => d.aVal >= d.bVal).length;
+    const winsB = duels.length - winsA;
+    const draw = winsA === winsB;
+    const aWon = winsA > winsB;
+
+    const segments = (wins, color) =>
+      Array.from({ length: 12 }, (_, i) => ({ bg: i < wins * 2 ? color : 'rgba(255,255,255,.09)' }));
+
+    return {
+      navItems: [
+        { label: 'Выбор', href: '#select' },
+        { label: 'Покедекс', href: '#catalog' },
+        { label: 'Досье', href: '#fighter' },
+        { label: 'Прокачка', href: '#tune' },
+        { label: 'Состав', href: '#team' },
+        { label: 'Битва', href: '#battle' },
+        { label: 'История', href: '#history' },
+      ].map((n, i) => ({
+        ...n,
+        color: i === 0 ? '#000' : 'rgba(255,255,255,.7)',
+        bg: i === 0 ? WHITE : 'transparent',
+      })),
+      fighters,
+      selectCards,
+      rosterCount: '1028',
+      foundCount: '148',
+      hero,
+      evolution,
+      heroFacts,
+      tuneRows,
+      teamA,
+      teamB,
+      bench,
+      duels,
+      teamAName,
+      teamBName,
+      statLabel: stat.label,
+      statSumA: sumA,
+      statSumB: sumB,
+      totalA: teamA.reduce((a, f) => a + f.total, 0),
+      totalB: teamB.reduce((a, f) => a + f.total, 0),
+      segsA: segments(winsA, AMBER),
+      segsB: segments(winsB, BLUE),
+      score: winsA + ':' + winsB,
+      winner: {
+        name: draw ? teamAName : aWon ? teamAName : teamBName,
+        color: draw ? WHITE : aWon ? AMBER : BLUE,
+        wins: Math.max(winsA, winsB),
+        sum: aWon || draw ? sumA : sumB,
+        label: draw ? 'НИЧЬЯ' : 'ПОБЕДА',
+        border: draw ? 'rgba(255,255,255,.1)' : AMBER,
+        anim: draw ? 'none' : 'goldring 2.4s ease-in-out infinite',
+      },
+      loser: {
+        name: draw ? teamBName : aWon ? teamBName : teamAName,
+        color: draw ? WHITE : aWon ? BLUE : AMBER,
+        wins: Math.min(winsA, winsB),
+        sum: aWon || draw ? sumB : sumA,
+        label: draw ? 'НИЧЬЯ' : 'ПОРАЖЕНИЕ',
+        opacity: draw ? '1' : '.55',
+      },
+      typeChips: ['ПЛАМЯ', 'ПРИЛИВ', 'ПОБЕГ', 'РАЗРЯД', 'КАМЕНЬ', 'ТЕНЬ', 'СВЕТ', 'ИНЕЙ', 'ТОКСИН', 'ВЕТЕР', 'ПСИ', 'СТАЛЬ'].map((label, i) => ({
+        label,
+        bg: i === 0 ? AMBER : 'rgba(255,255,255,.07)',
+        color: i === 0 ? '#000' : 'rgba(255,255,255,.7)',
+      })),
+      statChips: STATS.map((s) => ({
+        label: s.label,
+        bg: s.key === stat.key ? WHITE : 'rgba(255,255,255,.07)',
+        color: s.key === stat.key ? '#000' : 'rgba(255,255,255,.7)',
+      })),
+      history: [{ date: '11.08 · 18:24', a: teamAName, b: teamBName, stat: stat.label, score: winsA + ':' + winsB, win: draw ? 'НИЧЬЯ' : aWon ? 'A' : 'B' }]
+        .concat(HISTORY_TAIL)
+        .map((h) => ({
+          ...h,
+          winner: h.win === 'A' ? teamAName : h.win === 'B' ? teamBName : 'Ничья',
+          tone: h.win === 'A' ? AMBER : h.win === 'B' ? BLUE : MINT,
+        })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

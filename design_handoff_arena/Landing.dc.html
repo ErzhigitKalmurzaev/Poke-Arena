@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #000; color: #FFF; font-family: Manrope, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #FFB444; text-decoration: none; }
+  a:hover { color: #B2FFE2; }
+  *:focus-visible { outline: 2px solid #ADDAEE; outline-offset: 3px; }
+  @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+  @keyframes pop { 0% { transform: scale(.86); opacity: 0 } 60% { transform: scale(1.04) } 100% { transform: scale(1); opacity: 1 } }
+  @keyframes glowIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes nudge { 0%,100% { transform: translateX(0) } 50% { transform: translateX(5px) } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
+</style>
+</helmet>
+
+<div style="background:#000;min-width:1280px;overflow-x:hidden">
+
+  <section style="position:relative;min-height:100vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="position:absolute;inset:0;background:radial-gradient(58% 62% at 50% 34%, {{ glow }}, transparent 72%);transition:background 520ms ease"></div>
+    <div style="position:absolute;left:0;right:0;top:26%;text-align:center;font-family:Outfit,sans-serif;font-size:230px;font-weight:700;letter-spacing:-.05em;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.11);white-space:nowrap;pointer-events:none;transition:opacity 300ms">{{ current.upper }}</div>
+
+    <header style="position:relative;display:flex;align-items:center;gap:36px;padding:22px 44px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span style="width:34px;height:34px;border-radius:12px;background:{{ current.color }};display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#000;transition:background 400ms">A</span>
+        <span style="font-family:Outfit,sans-serif;font-size:21px;font-weight:600">Arena</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.45)">
+        <span style="width:7px;height:7px;border-radius:50%;background:#B2FFE2"></span>{{ online }} БОЁВ СЕЙЧАС
+      </div>
+      <nav style="margin-left:auto;display:flex;align-items:center;gap:26px;font-size:14px;color:rgba(255,255,255,.6)">
+        <a href="#duel" style="color:inherit">Дуэль</a>
+        <a href="#elements" style="color:inherit">Стихии</a>
+        <a href="#tune" style="color:inherit">Прокачка</a>
+        <a href="Arena.dc.html" style="padding:11px 22px;border-radius:999px;background:#FFF;color:#000;font-weight:600">Открыть арену</a>
+      </nav>
+    </header>
+
+    <div style="position:relative;flex:1;display:grid;grid-template-columns:88px minmax(0,1180px) 88px;justify-content:center;align-items:center">
+      <div style="display:grid;place-items:center">
+        <button onClick="{{ prev }}" aria-label="Предыдущий боец" style="width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(35,35,35,.7);color:#FFF;font-size:20px;cursor:pointer;transition:transform 200ms,background 200ms" style-hover="background:#FFF;color:#000;transform:scale(1.06)">←</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:250px 1fr 336px;gap:34px;align-items:center;padding:0 10px">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.4)">ДРАФТ · ВЫБЕРИ ШЕСТЕРЫХ</div>
+          <sc-for list="{{ sideCards }}" as="s" hint-placeholder-count="2">
+            <div onClick="{{ s.select }}" style="border-radius:22px;overflow:hidden;background:{{ s.bg }};opacity:{{ s.opacity }};cursor:pointer;transition:opacity 260ms,transform 260ms" style-hover="transform:translateX(6px);opacity:1">
+              <div style="height:104px;background:repeating-linear-gradient(135deg,{{ s.stripe }} 0 9px,transparent 9px 18px)"></div>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;padding:12px 14px">
+                <span style="font-family:Outfit,sans-serif;font-size:17px;font-weight:600;color:{{ s.ink }}">{{ s.name }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ s.inkSoft }}">{{ s.id }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="position:relative;border-radius:34px;overflow:hidden;background:{{ current.color }};box-shadow:0 50px 110px rgba(0,0,0,.66);transition:background 460ms ease">
+          <div style="position:relative;height:392px;background:repeating-linear-gradient(135deg,rgba(0,0,0,.08) 0 11px,transparent 11px 22px);display:grid;place-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(0,0,0,.4)">АРТ БОЙЦА · 1024×1024</span>
+            <span style="position:absolute;top:18px;left:20px;padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.14);font-family:'IBM Plex Mono',monospace;font-size:11px;color:#000">{{ current.id }}</span>
+            <span style="position:absolute;top:18px;right:20px;padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.14);font-family:'IBM Plex Mono',monospace;font-size:11px;color:#000">ЭВО {{ current.evo }}</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:22px 26px 26px;color:#000">
+            <div>
+              <div style="font-family:Outfit,sans-serif;font-size:44px;font-weight:600;line-height:1;letter-spacing:-.03em">{{ current.name }}</div>
+              <div style="display:flex;gap:7px;margin-top:12px">
+                <span style="padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.14);font-family:'IBM Plex Mono',monospace;font-size:11px">{{ current.typeA }}</span>
+                <span style="padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.14);font-family:'IBM Plex Mono',monospace;font-size:11px">{{ current.typeB }}</span>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:rgba(0,0,0,.55)">СУММА СТАТОВ</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;line-height:1.1">{{ current.total }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div style="border-radius:26px;background:#232323;padding:22px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.45)">ПАРАМЕТРЫ</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ current.color }};transition:color 400ms">{{ current.role }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+              <sc-for list="{{ current.bars }}" as="b" hint-placeholder-count="6">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px">
+                    <span style="color:rgba(255,255,255,.55)">{{ b.label }}</span>
+                    <span style="font-weight:600">{{ b.value }}</span>
+                  </div>
+                  <div style="margin-top:6px;height:7px;border-radius:999px;background:rgba(255,255,255,.08)">
+                    <div style="height:100%;border-radius:999px;background:{{ b.tone }};width:{{ b.pct }};transition:width 560ms cubic-bezier(.2,.8,.2,1),background 400ms"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <button onClick="{{ pickCurrent }}" style="padding:17px;border-radius:999px;border:none;background:{{ pickBtn.bg }};color:{{ pickBtn.color }};font-family:Manrope,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform 180ms,background 300ms" style-hover="transform:translateY(-2px)">{{ pickBtn.label }}</button>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:rgba(255,255,255,.32);text-align:center">← → ПЕРЕКЛЮЧАЮТ БОЙЦА · ENTER ДОБАВЛЯЕТ</div>
+        </div>
+      </div>
+
+      <div style="display:grid;place-items:center">
+        <button onClick="{{ next }}" aria-label="Следующий боец" style="width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(35,35,35,.7);color:#FFF;font-size:20px;cursor:pointer;transition:transform 200ms,background 200ms" style-hover="background:#FFF;color:#000;transform:scale(1.06)">→</button>
+      </div>
+    </div>
+
+    <div style="position:relative;display:flex;align-items:center;gap:22px;padding:20px 44px 30px;max-width:1560px;margin:0 auto;width:100%;box-sizing:border-box">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.42)">ТВОЙ ОТРЯД</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;line-height:1.2">{{ rosterCount }}<span style="color:rgba(255,255,255,.35)">/6</span></div>
+      </div>
+      <div style="display:flex;gap:10px;flex:1">
+        <sc-for list="{{ rosterSlots }}" as="s" hint-placeholder-count="6">
+          <div onClick="{{ s.clear }}" style="flex:1;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;background:{{ s.bg }};border:1px {{ s.borderStyle }} {{ s.border }};cursor:{{ s.cursor }};animation:{{ s.anim }}">
+            <span style="width:38px;height:38px;border-radius:12px;background:{{ s.chip }};display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ s.chipInk }}">{{ s.index }}</span>
+            <span style="min-width:0">
+              <span style="display:block;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:{{ s.ink }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span>
+              <span style="display:block;margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ s.meta }}">{{ s.hint }}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+      <a href="Arena.dc.html" style="display:flex;align-items:center;gap:10px;padding:17px 30px;border-radius:999px;background:{{ ctaBg }};color:{{ ctaInk }};font-size:15px;font-weight:600;white-space:nowrap;transition:background 300ms">{{ ctaLabel }}<span style="animation:nudge 1.6s ease-in-out infinite">→</span></a>
+    </div>
+  </section>
+
+  <div style="position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);background:#000;padding:15px 0">
+    <div style="display:flex;gap:44px;width:max-content;animation:ticker 34s linear infinite">
+      <sc-for list="{{ ticker }}" as="t" hint-placeholder-count="12">
+        <span style="display:flex;align-items:center;gap:11px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5);white-space:nowrap">
+          <span style="width:6px;height:6px;border-radius:50%;background:{{ t.tone }}"></span>{{ t.text }}
+        </span>
+      </sc-for>
+    </div>
+  </div>
+
+  <section id="duel" style="padding:88px 44px;max-width:1560px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:390px 1fr;gap:44px;align-items:start">
+      <div style="position:sticky;top:44px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:#FFB444">ПОПРОБУЙ ПРЯМО ЗДЕСЬ</div>
+        <h2 style="margin:14px 0 0;font-family:Outfit,sans-serif;font-size:54px;font-weight:600;line-height:1;letter-spacing:-.035em">Бой — это<br />честное сравнение</h2>
+        <p style="margin:18px 0 0;font-size:15.5px;line-height:1.62;color:rgba(255,255,255,.6);text-wrap:pretty">Выбирай параметр, жми «Запустить» и смотри, как шесть пар расходятся по раундам. Никаких скрытых коэффициентов — каждое число на экране.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:26px">
+          <sc-for list="{{ statChips }}" as="c" hint-placeholder-count="6">
+            <button onClick="{{ c.select }}" style="padding:11px 17px;border-radius:999px;border:none;background:{{ c.bg }};color:{{ c.color }};font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;cursor:pointer;transition:background 220ms">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ toggleRun }}" style="margin-top:22px;padding:16px 32px;border-radius:999px;border:none;background:{{ runBtn.bg }};color:{{ runBtn.color }};font-family:Manrope,sans-serif;font-size:15px;font-weight:600;cursor:pointer">{{ runBtn.label }}</button>
+        <div style="display:flex;gap:26px;margin-top:30px">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:#FFB444">{{ duelScore.a }}</div>
+            <div style="margin-top:4px;font-size:12.5px;color:rgba(255,255,255,.45)">раундов за Острие</div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:#ADDAEE">{{ duelScore.b }}</div>
+            <div style="margin-top:4px;font-size:12.5px;color:rgba(255,255,255,.45)">раундов за Затмение</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-radius:34px;background:#232323;padding:30px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:11px;font-family:Outfit,sans-serif;font-size:19px;font-weight:600"><span style="width:26px;height:26px;border-radius:9px;background:#FFB444"></span>Острие</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.42)">{{ statLabel }}</span>
+          <span style="display:flex;align-items:center;gap:11px;font-family:Outfit,sans-serif;font-size:19px;font-weight:600">Затмение<span style="width:26px;height:26px;border-radius:9px;background:#ADDAEE"></span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px">
+          <sc-for list="{{ duels }}" as="d" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:1fr 112px 1fr;align-items:center;gap:16px;padding:12px 16px;border-radius:20px;background:#000">
+              <div style="display:flex;align-items:center;gap:11px">
+                <span style="min-width:104px;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)">{{ d.aName }}</span>
+                <span style="min-width:32px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ d.aTone }}">{{ d.aVal }}</span>
+                <div style="flex:1;height:14px;border-radius:999px;background:rgba(255,255,255,.07)">
+                  <div style="height:100%;border-radius:999px;background:{{ d.aFill }};width:{{ d.aPct }};transition:width 680ms cubic-bezier(.15,.85,.2,1) {{ d.delay }},background 300ms"></div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:6px;border-radius:999px;background:rgba(255,255,255,.06);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:{{ d.tagTone }}">{{ d.tag }}</div>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div style="flex:1;height:14px;border-radius:999px;background:rgba(255,255,255,.07);display:flex;justify-content:flex-end">
+                  <div style="height:100%;border-radius:999px;background:{{ d.bFill }};width:{{ d.bPct }};transition:width 680ms cubic-bezier(.15,.85,.2,1) {{ d.delay }},background 300ms"></div>
+                </div>
+                <span style="min-width:32px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ d.bTone }}">{{ d.bVal }}</span>
+                <span style="min-width:104px;text-align:right;font-family:Outfit,sans-serif;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)">{{ d.bName }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:22px;padding:18px 22px;border-radius:22px;background:{{ verdict.bg }};color:{{ verdict.ink }};font-size:15px;font-weight:600;transition:background 320ms">{{ verdict.text }}</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="elements" style="padding:0 44px 88px;max-width:1560px;margin:0 auto">
+    <div style="border-radius:40px;background:#232323;padding:48px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px">
+        <div>
+          <div style="font-family:Outfit,sans-serif;font-size:24px;font-weight:300;font-style:italic;color:rgba(255,255,255,.55)">Кто такие</div>
+          <h2 style="margin:6px 0 0;font-family:Outfit,sans-serif;font-size:54px;font-weight:600;line-height:1;letter-spacing:-.035em">бойцы арены</h2>
+        </div>
+        <p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.55);text-wrap:pretty">Каждый боец — существо со стихией, шестью параметрами и линией эволюции из трёх ступеней. Стихия решает, кому он неудобен. Нажми на стихию.</p>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:32px">
+        <sc-for list="{{ typeChips }}" as="t" hint-placeholder-count="8">
+          <button onClick="{{ t.select }}" style="padding:11px 18px;border-radius:999px;border:none;background:{{ t.bg }};color:{{ t.color }};font-family:'IBM Plex Mono',monospace;font-size:11.5px;cursor:pointer;transition:background 220ms,transform 180ms" style-hover="transform:translateY(-2px)">{{ t.label }}</button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:20px;margin-top:28px">
+        <div style="border-radius:30px;padding:34px;background:{{ element.color }};color:#000;transition:background 420ms">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:rgba(0,0,0,.55)">СТИХИЯ</div>
+          <div style="margin-top:10px;font-family:Outfit,sans-serif;font-size:56px;font-weight:600;line-height:1;letter-spacing:-.03em">{{ element.label }}</div>
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.55;color:rgba(0,0,0,.7);text-wrap:pretty">{{ element.text }}</p>
+          <div style="display:grid;gap:12px;margin-top:26px">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(0,0,0,.12)">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;color:rgba(0,0,0,.6)">СИЛЬНА ПРОТИВ</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600">{{ element.strong }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(0,0,0,.12)">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;color:rgba(0,0,0,.6)">СЛАБА ПРОТИВ</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600">{{ element.weak }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-content:start">
+          <sc-for list="{{ elementFighters }}" as="p" hint-placeholder-count="4">
+            <div onClick="{{ p.select }}" style="border-radius:26px;overflow:hidden;background:{{ p.bg }};cursor:pointer;transition:transform 240ms" style-hover="transform:translateY(-6px)">
+              <div style="position:relative;height:158px;background:repeating-linear-gradient(135deg,{{ p.stripe }} 0 10px,transparent 10px 20px);display:grid;place-items:center">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:{{ p.slotTone }}">АРТ БОЙЦА</span>
+                <span style="position:absolute;top:14px;right:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ p.slotTone }}">{{ p.id }}</span>
+              </div>
+              <div style="padding:16px 18px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between">
+                  <span style="font-family:Outfit,sans-serif;font-size:21px;font-weight:600;color:{{ p.ink }}">{{ p.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:{{ p.inkMeta }}">{{ p.total }}</span>
+                </div>
+                <p style="margin:7px 0 0;font-size:13px;line-height:1.5;color:{{ p.inkSoft }};text-wrap:pretty">{{ p.text }}</p>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tune" style="padding:0 44px 88px;max-width:1560px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1.08fr 1fr;gap:20px">
+      <div style="border-radius:38px;background:#B2FFE2;padding:44px;color:#000">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:rgba(0,0,0,.55)">ПРОКАЧКА · ПОПРОБУЙ</div>
+        <h2 style="margin:14px 0 0;font-family:Outfit,sans-serif;font-size:46px;font-weight:600;line-height:1.02;letter-spacing:-.03em">Раздай очки —<br />увидишь разницу</h2>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-top:22px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600">{{ pointsLeft }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:rgba(0,0,0,.6)">СВОБОДНЫХ ОЧКОВ</span>
+          <button onClick="{{ resetPoints }}" style="margin-left:auto;padding:10px 18px;border-radius:999px;border:1px solid rgba(0,0,0,.25);background:transparent;font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#000;cursor:pointer">Сбросить правки</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px">
+          <sc-for list="{{ tuneRows }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:104px 1fr 108px 96px;gap:14px;align-items:center">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(0,0,0,.65)">{{ r.label }}</span>
+              <div style="position:relative;height:9px;border-radius:999px;background:rgba(0,0,0,.13)">
+                <div style="position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:rgba(0,0,0,.45);width:{{ r.basePct }}"></div>
+                <div style="position:absolute;top:0;bottom:0;border-radius:999px;background:#000;left:{{ r.basePct }};width:{{ r.addPct }};transition:width 380ms cubic-bezier(.2,.8,.2,1)"></div>
+              </div>
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">{{ r.base }} → {{ r.final }}</span>
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px">
+                <button onClick="{{ r.dec }}" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.12);font-family:'IBM Plex Mono',monospace;font-size:15px;color:#000;cursor:pointer">−</button>
+                <span style="min-width:18px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ r.points }}</span>
+                <button onClick="{{ r.inc }}" style="width:30px;height:30px;border-radius:50%;border:none;background:#000;color:#B2FFE2;font-family:'IBM Plex Mono',monospace;font-size:15px;cursor:pointer">+</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:22px;font-size:13.5px;line-height:1.5;color:rgba(0,0,0,.62)">База — снимок покедекса, правки лежат отдельным слоем. Сброс возвращает бойца в исходное состояние.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="border-radius:38px;background:#232323;padding:40px;flex:1">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:#ADDAEE">ИСТОРИЯ</div>
+          <h2 style="margin:14px 0 0;font-family:Outfit,sans-serif;font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-.03em">Каждый бой остаётся в базе</h2>
+          <div style="display:flex;flex-direction:column;gap:1px;margin-top:26px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.08)">
+            <sc-for list="{{ historyDemo }}" as="h" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:15px 18px;background:#000;font-family:'IBM Plex Mono',monospace;font-size:12px">
+                <span style="color:rgba(255,255,255,.72)">{{ h.pair }}</span>
+                <span style="color:rgba(255,255,255,.42)">{{ h.stat }}</span>
+                <span style="font-weight:600;color:{{ h.tone }}">{{ h.score }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <a href="Arena.dc.html" style="border-radius:38px;background:#FFB444;padding:40px;color:#000;display:block">
+          <div style="font-family:Outfit,sans-serif;font-size:42px;font-weight:600;line-height:1;letter-spacing:-.03em">Отряд ждёт капитана</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px">
+            <span style="font-size:15px;color:rgba(0,0,0,.68)">{{ rosterCount }} из 6 слотов уже занято</span>
+            <span style="display:flex;align-items:center;gap:10px;padding:15px 26px;border-radius:999px;background:#000;color:#FFF;font-size:15px;font-weight:600">Открыть арену<span style="animation:nudge 1.6s ease-in-out infinite">→</span></span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer style="display:flex;align-items:center;gap:32px;padding:30px 44px 54px;max-width:1560px;margin:0 auto;border-top:1px solid rgba(255,255,255,.08);font-size:13px;color:rgba(255,255,255,.45)">
+    <span style="font-family:Outfit,sans-serif;font-size:17px;font-weight:600;color:#FFF">Arena</span>
+    <span>Данные бойцов — локальный снимок покедекса</span>
+    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace">2026 · ТЕСТОВОЕ ЗАДАНИЕ</span>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1560}}">
+const AMBER = '#FFB444', BLUE = '#ADDAEE', MINT = '#B2FFE2', WHITE = '#FFF';
+const MUTED = 'rgba(255,255,255,0.42)';
+
+const STATS = [
+  { key: 'hp', label: 'HP' },
+  { key: 'atk', label: 'АТАКА' },
+  { key: 'def', label: 'ЗАЩИТА' },
+  { key: 'spa', label: 'СП.АТАКА' },
+  { key: 'spd', label: 'СП.ЗАЩИТА' },
+  { key: 'spe', label: 'СКОРОСТЬ' },
+];
+
+const ELEMENTS = {
+  'ПЛАМЯ': { color: AMBER, strong: 'ПОБЕГ · ИНЕЙ · СТАЛЬ', weak: 'ПРИЛИВ · КАМЕНЬ', text: 'Разгоняет темп и давит уроном. Живёт короткими раундами: если бой затянулся, пламя выдыхается.' },
+  'ПРИЛИВ': { color: BLUE, strong: 'ПЛАМЯ · КАМЕНЬ · ЗЕМЛЯ', weak: 'ПОБЕГ · РАЗРЯД', text: 'Ровные защитные статы и запас HP. Забирает длинные бои за счёт того, что просто не падает.' },
+  'ПОБЕГ': { color: MINT, strong: 'ПРИЛИВ · КАМЕНЬ · ЗЕМЛЯ', weak: 'ПЛАМЯ · ИНЕЙ', text: 'Живучесть и восстановление. Неудобен всем, кто рассчитывает закрыть бой в первые раунды.' },
+  'РАЗРЯД': { color: AMBER, strong: 'ПРИЛИВ · ВЕТЕР', weak: 'ЗЕМЛЯ · КАМЕНЬ', text: 'Ставка на скорость и спец-атаку. Решает первым ходом — но защиты почти нет.' },
+  'КАМЕНЬ': { color: BLUE, strong: 'ПЛАМЯ · ВЕТЕР · ИНЕЙ', weak: 'ПРИЛИВ · ПОБЕГ · СТАЛЬ', text: 'Стена ростера. Проигрывает всё, что считается по скорости, и выигрывает всё, что по защите.' },
+  'ТЕНЬ': { color: MINT, strong: 'ПСИ · СВЕТ', weak: 'СВЕТ · ТОКСИН', text: 'Спец-атака в паре со спец-защитой. Неудобный соперник для тех, кто бьёт магией.' },
+  'СВЕТ': { color: AMBER, strong: 'ТЕНЬ · ТОКСИН', weak: 'ТЕНЬ · СТАЛЬ', text: 'Максимальная спец-атака в ростере. Хрупкий, но пробивает почти любую защиту.' },
+  'СТАЛЬ': { color: BLUE, strong: 'ИНЕЙ · КАМЕНЬ · СВЕТ', weak: 'ПЛАМЯ · РАЗРЯД', text: 'Атака и защита разом. Медленный: любой бой по скорости для него проигран заранее.' },
+};
+
+const ROSTER = [
+  { id: '#041', name: 'Фламбер', typeA: 'ПЛАМЯ', typeB: 'ГНЕВ', evo: 3, role: 'УДАРНЫЙ', hp: 84, atk: 148, def: 96, spa: 132, spd: 88, spe: 121, text: 'Атака и спец-атака выше нормы, защита средняя. Территория — короткие раунды.' },
+  { id: '#017', name: 'Тидрак', typeA: 'ПРИЛИВ', typeB: 'СТАЛЬ', evo: 3, role: 'ЗАЩИТНЫЙ', hp: 112, atk: 118, def: 134, spa: 96, spd: 120, spe: 74, text: 'Держит удар: защита и спец-защита выше среднего, скорость — слабое место.' },
+  { id: '#092', name: 'Вердал', typeA: 'ПОБЕГ', typeB: 'ЗЕМЛЯ', evo: 2, role: 'ТАНК', hp: 128, atk: 104, def: 118, spa: 88, spd: 112, spe: 66, text: 'Запас HP и ровные статы. Долгие раунды выигрывает за счёт живучести.' },
+  { id: '#008', name: 'Вольтир', typeA: 'РАЗРЯД', typeB: 'ВЕТЕР', evo: 2, role: 'СКОРОСТНОЙ', hp: 72, atk: 96, def: 68, spa: 152, spd: 84, spe: 158, text: 'Одна из лучших скоростей при хрупкой защите. Решает первым ходом.' },
+  { id: '#134', name: 'Гранитон', typeA: 'КАМЕНЬ', typeB: 'ЗЕМЛЯ', evo: 3, role: 'СТЕНА', hp: 146, atk: 138, def: 172, spa: 54, spd: 108, spe: 38, text: 'Защита 172 — лучшая в ростере. Всё, что по скорости, проигрывает.' },
+  { id: '#203', name: 'Ноктюрн', typeA: 'ТЕНЬ', typeB: 'ПСИ', evo: 2, role: 'МАГ', hp: 88, atk: 82, def: 92, spa: 148, spd: 126, spe: 112, text: 'Спец-атака и спец-защита в паре — неудобен другим магам.' },
+  { id: '#076', name: 'Люмира', typeA: 'СВЕТ', typeB: 'ПСИ', evo: 3, role: 'МАГ', hp: 94, atk: 68, def: 86, spa: 164, spd: 138, spe: 104, text: 'Максимальная спец-атака. Пробивает защиту, но сама почти не держит удар.' },
+  { id: '#151', name: 'Фростан', typeA: 'ИНЕЙ', typeB: 'СТАЛЬ', evo: 2, role: 'ЗАЩИТНЫЙ', hp: 108, atk: 126, def: 148, spa: 92, spd: 116, spe: 58, text: 'Плотный профиль на защите. Медленный — темп отдаёт сразу.' },
+  { id: '#119', name: 'Токсара', typeA: 'ТОКСИН', typeB: 'ТЕНЬ', evo: 3, role: 'УДАРНЫЙ', hp: 96, atk: 112, def: 84, spa: 138, spd: 94, spe: 128, text: 'Смешанный урон и хорошая скорость. Работает по чужим магам.' },
+  { id: '#065', name: 'Аэриск', typeA: 'ВЕТЕР', typeB: 'ПОБЕГ', evo: 2, role: 'СКОРОСТНОЙ', hp: 78, atk: 108, def: 72, spa: 116, spd: 82, spe: 166, text: 'Самый быстрый в ростере. Любой бой по скорости — его бой.' },
+  { id: '#188', name: 'Псиора', typeA: 'ПСИ', typeB: 'СВЕТ', evo: 3, role: 'МАГ', hp: 86, atk: 74, def: 78, spa: 158, spd: 132, spe: 118, text: 'Спец-атака и спец-защита при слабой физике. Боится быстрых ударников.' },
+  { id: '#224', name: 'Феррокс', typeA: 'СТАЛЬ', typeB: 'КАМЕНЬ', evo: 3, role: 'СТЕНА', hp: 132, atk: 156, def: 158, spa: 68, spd: 96, spe: 62, text: 'Атака и защита разом. Расплата — предпоследняя скорость в ростере.' },
+];
+
+const TICKER = [
+  { text: 'Острие 4:2 Затмение · СКОРОСТЬ', tone: AMBER },
+  { text: 'Кузня 5:1 Полуночь · ЗАЩИТА', tone: BLUE },
+  { text: 'Вольтир прокачан до ур.36', tone: MINT },
+  { text: 'Затмение 3:3 Прилив · HP — ничья', tone: WHITE },
+  { text: 'Гранитон закрыл раунд с отрывом 134', tone: AMBER },
+  { text: 'Люмира вышла на 3-ю ступень эволюции', tone: MINT },
+  { text: 'Полуночь 2:4 Острие · СП.АТАКА', tone: BLUE },
+  { text: 'В покедекс добавлено 12 бойцов', tone: WHITE },
+];
+
+const TINTS = [AMBER, BLUE, MINT];
+const total = (f) => f.hp + f.atk + f.def + f.spa + f.spd + f.spe;
+const pct = (v, max) => Math.round((v / max) * 100) + '%';
+const skin = (bg, dark) => ({
+  bg: dark ? '#111214' : bg,
+  ink: dark ? WHITE : '#000',
+  inkSoft: dark ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.66)',
+  inkMeta: dark ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.6)',
+  stripe: dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.07)',
+  slotTone: dark ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.45)',
+});
+
+class Component extends DCLogic {
+  state = { index: 0, roster: [], stat: 'spe', ran: true, element: 'ПЛАМЯ', points: {} };
+
+  componentDidMount() {
+    this.onKey = (e) => {
+      if (e.key === 'ArrowRight') this.step(1);
+      else if (e.key === 'ArrowLeft') this.step(-1);
+      else if (e.key === 'Enter') this.pick();
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onKey);
+  }
+  step(d) {
+    this.setState((s) => ({ index: (s.index + d + ROSTER.length) % ROSTER.length }));
+  }
+  pick() {
+    this.setState((s) => {
+      const id = ROSTER[s.index].id;
+      if (s.roster.includes(id) || s.roster.length >= 6) return null;
+      return { roster: s.roster.concat(id) };
+    });
+  }
+  clearSlot(id) {
+    this.setState((s) => ({ roster: s.roster.filter((x) => x !== id) }));
+  }
+  bump(key, d) {
+    this.setState((s) => {
+      const used = Object.values(s.points).reduce((a, b) => a + b, 0);
+      const cur = s.points[key] ?? 0;
+      if (d > 0 && used >= 7) return null;
+      if (d < 0 && cur === 0) return null;
+      return { points: { ...s.points, [key]: cur + d } };
+    });
+  }
+
+  renderVals() {
+    const st = this.state;
+    const fighters = ROSTER.map((f, i) => ({ ...f, total: total(f), tint: TINTS[i % 3] }));
+    const cur = fighters[st.index];
+    const curColor = ELEMENTS[cur.typeA] ? ELEMENTS[cur.typeA].color : AMBER;
+
+    const barTone = (v) => (v >= 140 ? curColor : v >= 100 ? WHITE : 'rgba(255,255,255,.55)');
+    const current = {
+      ...cur,
+      upper: cur.name.toUpperCase(),
+      color: curColor,
+      bars: STATS.map((s) => ({ label: s.label, value: cur[s.key], pct: pct(cur[s.key], 200), tone: barTone(cur[s.key]) })),
+    };
+
+    const at = (i) => fighters[(i + fighters.length) % fighters.length];
+    const sideCards = [at(st.index - 1), at(st.index + 1)].map((f, k) => {
+      const c = ELEMENTS[f.typeA] ? ELEMENTS[f.typeA].color : AMBER;
+      const sk = skin(c, false);
+      return {
+        ...f,
+        ...sk,
+        opacity: k === 0 ? '.62' : '.5',
+        select: () => this.setState({ index: fighters.indexOf(f) }),
+      };
+    });
+
+    const picked = st.roster.map((id) => fighters.find((f) => f.id === id));
+    const rosterSlots = Array.from({ length: 6 }, (_, i) => {
+      const f = picked[i];
+      if (!f) {
+        return {
+          index: '0' + (i + 1),
+          name: 'Пусто',
+          hint: 'ВЫБЕРИ БОЙЦА',
+          bg: 'transparent',
+          border: 'rgba(255,255,255,.16)',
+          borderStyle: 'dashed',
+          chip: 'rgba(255,255,255,.06)',
+          chipInk: 'rgba(255,255,255,.4)',
+          ink: 'rgba(255,255,255,.4)',
+          meta: 'rgba(255,255,255,.28)',
+          cursor: 'default',
+          anim: 'none',
+          clear: () => {},
+        };
+      }
+      const c = ELEMENTS[f.typeA] ? ELEMENTS[f.typeA].color : AMBER;
+      return {
+        index: '0' + (i + 1),
+        name: f.name,
+        hint: 'УБРАТЬ ·  ' + f.typeA,
+        bg: '#232323',
+        border: c,
+        borderStyle: 'solid',
+        chip: c,
+        chipInk: '#000',
+        ink: WHITE,
+        meta: 'rgba(255,255,255,.42)',
+        cursor: 'pointer',
+        anim: 'pop 320ms cubic-bezier(.2,.8,.2,1) both',
+        clear: () => this.clearSlot(f.id),
+      };
+    });
+
+    const full = st.roster.length >= 6;
+    const inRoster = st.roster.includes(cur.id);
+    const pickBtn = inRoster
+      ? { label: 'Уже в отряде — убрать', bg: 'rgba(255,255,255,.1)', color: WHITE }
+      : full
+      ? { label: 'Отряд собран — в арену', bg: MINT, color: '#000' }
+      : { label: 'Добавить в отряд', bg: WHITE, color: '#000' };
+    const pickCurrent = inRoster ? () => this.clearSlot(cur.id) : () => this.pick();
+
+    const stat = STATS.find((s) => s.key === st.stat) ?? STATS[5];
+    const teamA = fighters.slice(0, 6);
+    const byId = (id) => fighters.find((f) => f.id === id);
+    const teamB = ['#076', '#224', '#151', '#119', '#065', '#188'].map(byId);
+    const maxVal = Math.max(...fighters.map((f) => f[stat.key]));
+
+    const duels = teamA.map((a, i) => {
+      const b = teamB[i];
+      const aWin = a[stat.key] >= b[stat.key];
+      return {
+        aName: a.name,
+        bName: b.name,
+        aVal: a[stat.key],
+        bVal: b[stat.key],
+        aPct: st.ran ? pct(a[stat.key], maxVal) : '0%',
+        bPct: st.ran ? pct(b[stat.key], maxVal) : '0%',
+        aFill: aWin ? AMBER : 'rgba(255,180,68,.3)',
+        bFill: aWin ? 'rgba(173,218,238,.3)' : BLUE,
+        aTone: st.ran ? (aWin ? AMBER : MUTED) : MUTED,
+        bTone: st.ran ? (aWin ? MUTED : BLUE) : MUTED,
+        tag: 'РАУНД 0' + (i + 1),
+        tagTone: st.ran ? (aWin ? AMBER : BLUE) : MUTED,
+        delay: 70 * i + 'ms',
+      };
+    });
+    const winsA = duels.filter((d) => d.aVal >= d.bVal).length;
+    const winsB = duels.length - winsA;
+    const verdict = !st.ran
+      ? { text: 'Жми «Запустить бой» — полосы поедут от края к центру.', bg: 'rgba(255,255,255,.06)', ink: 'rgba(255,255,255,.7)' }
+      : winsA === winsB
+      ? { text: 'Ничья ' + winsA + ':' + winsB + ' по параметру «' + stat.label + '». Смени параметр — исход изменится.', bg: MINT, ink: '#000' }
+      : winsA > winsB
+      ? { text: 'Острие берёт бой ' + winsA + ':' + winsB + ' по параметру «' + stat.label + '».', bg: AMBER, ink: '#000' }
+      : { text: 'Затмение берёт бой ' + winsB + ':' + winsA + ' по параметру «' + stat.label + '».', bg: BLUE, ink: '#000' };
+
+    const el = ELEMENTS[st.element];
+    const elementFighters = fighters
+      .filter((f) => f.typeA === st.element || f.typeB === st.element)
+      .slice(0, 4)
+      .map((f, i) => ({ ...f, ...skin(el.color, i % 2 === 1), select: () => this.setState({ index: fighters.indexOf(f) }) }));
+
+    const usedPoints = Object.values(st.points).reduce((a, b) => a + b, 0);
+    const tuneRows = STATS.map((s) => {
+      const pts = st.points[s.key] ?? 0;
+      const base = fighters[0][s.key];
+      return {
+        label: s.label,
+        base,
+        final: base + pts * 6,
+        points: pts,
+        basePct: pct(base, 220),
+        addPct: pct(pts * 6, 220),
+        inc: () => this.bump(s.key, 1),
+        dec: () => this.bump(s.key, -1),
+      };
+    });
+
+    return {
+      current,
+      sideCards,
+      glow: curColor === AMBER ? 'rgba(255,180,68,.24)' : curColor === BLUE ? 'rgba(173,218,238,.22)' : 'rgba(178,255,226,.2)',
+      online: '1 284',
+      prev: () => this.step(-1),
+      next: () => this.step(1),
+      pickCurrent,
+      pickBtn,
+      rosterSlots,
+      rosterCount: st.roster.length,
+      ctaBg: full ? MINT : st.roster.length ? WHITE : 'rgba(255,255,255,.1)',
+      ctaInk: st.roster.length ? '#000' : 'rgba(255,255,255,.8)',
+      ctaLabel: full ? 'Отряд готов — в арену' : st.roster.length ? 'Продолжить в арене' : 'Открыть арену',
+      ticker: TICKER.concat(TICKER),
+      statLabel: stat.label,
+      statChips: STATS.map((s) => ({
+        label: s.label,
+        bg: s.key === stat.key ? WHITE : 'rgba(255,255,255,.08)',
+        color: s.key === stat.key ? '#000' : 'rgba(255,255,255,.72)',
+        select: () => this.setState({ stat: s.key, ran: false }, () => setTimeout(() => this.setState({ ran: true }), 60)),
+      })),
+      toggleRun: () => this.setState((s) => ({ ran: !s.ran })),
+      runBtn: st.ran ? { label: 'Сбросить бой', bg: 'rgba(255,255,255,.1)', color: WHITE } : { label: 'Запустить бой', bg: AMBER, color: '#000' },
+      duels,
+      duelScore: { a: st.ran ? winsA : 0, b: st.ran ? winsB : 0 },
+      verdict,
+      typeChips: Object.keys(ELEMENTS).map((label) => ({
+        label,
+        bg: label === st.element ? ELEMENTS[label].color : 'rgba(255,255,255,.08)',
+        color: label === st.element ? '#000' : 'rgba(255,255,255,.72)',
+        select: () => this.setState({ element: label }),
+      })),
+      element: { label: st.element, color: el.color, text: el.text, strong: el.strong, weak: el.weak },
+      elementFighters,
+      pointsLeft: 7 - usedPoints,
+      tuneRows,
+      resetPoints: () => this.setState({ points: {} }),
+      historyDemo: [
+        { pair: 'Острие — Затмение', stat: 'СКОРОСТЬ', score: '4:2', tone: AMBER },
+        { pair: 'Острие — Полуночь', stat: 'СП.АТАКА', score: '2:4', tone: BLUE },
+        { pair: 'Кузня — Затмение', stat: 'ЗАЩИТА', score: '5:1', tone: MINT },
+        { pair: 'Острие — Кузня', stat: 'HP', score: '3:3', tone: WHITE },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>
