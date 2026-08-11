@@ -1,10 +1,12 @@
+import { TONE_BG, TONE_HEX, TONE_TEXT, toneOfTypes, toneRgba, type FighterTone } from '@/entities/fighter';
 import { staticFighters, type StaticFighterRecord } from '@/shared/api/static-dataset';
 
-export type BrandTone = 'amber' | 'blue' | 'mint';
+export type { FighterTone as BrandTone };
+export { TONE_BG, TONE_HEX, TONE_TEXT, toneRgba };
 
 export interface RosterFighter extends StaticFighterRecord {
   total: number;
-  tone: BrandTone;
+  tone: FighterTone;
   role: string;
 }
 
@@ -16,29 +18,6 @@ export const STATS: { key: string; label: string }[] = [
   { key: 'special-defense', label: 'СП.ЗАЩИТА' },
   { key: 'speed', label: 'СКОРОСТЬ' },
 ];
-
-// Only 3 accents exist in the design system - every type maps onto one of
-// them (warm/aggressive, cool/defensive, or utility), never a 4th color.
-export const TYPE_TONE: Record<string, BrandTone> = {
-  fire: 'amber',
-  electric: 'amber',
-  fighting: 'amber',
-  dragon: 'amber',
-  ground: 'amber',
-  rock: 'amber',
-  water: 'blue',
-  ice: 'blue',
-  flying: 'blue',
-  psychic: 'blue',
-  steel: 'blue',
-  grass: 'mint',
-  poison: 'mint',
-  bug: 'mint',
-  normal: 'mint',
-  fairy: 'mint',
-  ghost: 'mint',
-  dark: 'mint',
-};
 
 export const TYPE_MATCHUPS: Record<string, { strong: string[]; weak: string[] }> = {
   normal: { strong: [], weak: ['fighting'] },
@@ -86,10 +65,6 @@ function total(stats: Record<string, number>): number {
   return Object.values(stats).reduce((sum, value) => sum + value, 0);
 }
 
-export function toneOf(types: string[]): BrandTone {
-  return TYPE_TONE[types[0] ?? 'normal'] ?? 'mint';
-}
-
 function roleOf(stats: Record<string, number>): string {
   const entries = Object.entries(stats);
   const [topKey] = entries.reduce((best, entry) => (entry[1] > best[1] ? entry : best), entries[0] ?? ['hp', 0]);
@@ -120,35 +95,9 @@ const byId = new Map(staticFighters.map((fighter) => [fighter.id, fighter]));
 export const ROSTER: RosterFighter[] = ROSTER_IDS.map((id) => {
   const fighter = byId.get(id);
   if (!fighter) throw new Error(`Landing roster references unknown fighter id ${id}`);
-  return { ...fighter, total: total(fighter.stats), tone: toneOf(fighter.types), role: roleOf(fighter.stats) };
+  return { ...fighter, total: total(fighter.stats), tone: toneOfTypes(fighter.types), role: roleOf(fighter.stats) };
 });
 
 export const ROSTER_TYPES = Array.from(new Set(ROSTER.flatMap((fighter) => fighter.types)));
 
 export const TOTAL_FIGHTER_COUNT = staticFighters.length;
-
-export const TONE_BG: Record<BrandTone, string> = {
-  amber: 'bg-brand-amber',
-  blue: 'bg-brand-blue',
-  mint: 'bg-brand-mint',
-};
-
-export const TONE_TEXT: Record<BrandTone, string> = {
-  amber: 'text-brand-amber',
-  blue: 'text-brand-blue',
-  mint: 'text-brand-mint',
-};
-
-export const TONE_HEX: Record<BrandTone, string> = {
-  amber: '#ffb444',
-  blue: '#addaee',
-  mint: '#b2ffe2',
-};
-
-export function toneRgba(tone: BrandTone, alpha: number): string {
-  const hex = TONE_HEX[tone];
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}

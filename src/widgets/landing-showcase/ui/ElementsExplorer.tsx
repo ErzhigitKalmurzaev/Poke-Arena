@@ -2,12 +2,13 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { ROSTER, ROSTER_TYPES, TONE_HEX, TYPE_MATCHUPS, TYPE_TEXT, TYPE_TONE, toneOf } from '../model/roster';
+import { toneOfTypes } from '@/entities/fighter';
+import { ROSTER, ROSTER_TYPES, TONE_HEX, TYPE_MATCHUPS, TYPE_TEXT } from '../model/roster';
 
 export function ElementsExplorer() {
   const [type, setType] = useState(ROSTER_TYPES[0]!);
 
-  const tone = TYPE_TONE[type] ?? 'mint';
+  const tone = toneOfTypes([type]);
   const matchup = TYPE_MATCHUPS[type] ?? { strong: [], weak: [] };
   const fighters = ROSTER.filter((f) => f.types.includes(type)).slice(0, 4);
 
@@ -35,7 +36,7 @@ export function ElementsExplorer() {
               onClick={() => setType(t)}
               className="rounded-full px-4.5 py-2.5 font-mono text-[11.5px] uppercase transition-transform duration-200 hover:-translate-y-0.5"
               style={{
-                background: t === type ? TONE_HEX[TYPE_TONE[t] ?? 'mint'] : 'rgba(255,255,255,.08)',
+                background: t === type ? TONE_HEX[toneOfTypes([t])] : 'rgba(255,255,255,.08)',
                 color: t === type ? '#000' : 'rgba(255,255,255,.72)',
               }}
             >
@@ -69,7 +70,7 @@ export function ElementsExplorer() {
 
           <div className="grid grid-cols-1 gap-4 content-start sm:grid-cols-2">
             {fighters.map((fighter) => {
-              const fighterTone = toneOf(fighter.types);
+              const fighterTone = toneOfTypes(fighter.types);
               return (
                 <div
                   key={fighter.id}
