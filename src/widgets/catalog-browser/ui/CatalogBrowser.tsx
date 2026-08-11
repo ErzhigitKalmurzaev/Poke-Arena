@@ -105,25 +105,26 @@ export function CatalogBrowser() {
             {isLoading ? 'ЗАГРУЗКА…' : `НАЙДЕНО ${filtered.length} ИЗ ${fighters?.length ?? 0}`}
           </div>
 
-          {isError && (
-            <div className="rounded-[22px] bg-card p-6 text-[15px] text-white/70">
-              Не получилось загрузить данные. Проверь соединение и обнови страницу.
-              <button type="button" onClick={() => void refetch()} className="ml-3 font-semibold text-brand-red underline">
+          {/*
+            Every branch below shares this exact box (h-[calc(100vh-220px)])
+            so switching between loading/empty/error/loaded never shifts the
+            page - only what's inside the box changes.
+          */}
+          {isError ? (
+            <div className="flex h-[calc(100vh-220px)] flex-col items-start gap-3 rounded-[22px] bg-card p-6 text-[15px] text-white/70">
+              <p>Не получилось загрузить данные. Проверь соединение и обнови страницу.</p>
+              <button type="button" onClick={() => void refetch()} className="font-semibold text-brand-red underline">
                 Повторить
               </button>
             </div>
-          )}
-
-          {isLoading && <CatalogSkeleton />}
-
-          {!isLoading && !isError && filtered.length === 0 && (
-            <div className="rounded-[22px] bg-card p-6 text-[15px] text-white/70">
+          ) : isLoading ? (
+            <CatalogSkeleton />
+          ) : filtered.length === 0 ? (
+            <div className="flex h-[calc(100vh-220px)] items-start rounded-[22px] bg-card p-6 text-[15px] text-white/70">
               Под эти фильтры бойцов нет — ослабь диапазон.
             </div>
-          )}
-
-          {!isLoading && !isError && filtered.length > 0 && (
-            <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+          ) : (
+            <div ref={scrollRef} className="h-[calc(100vh-220px)] overflow-y-auto">
               <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
                 {virtualizer.getVirtualItems().map((virtualRow) => (
                   <div
@@ -145,8 +146,8 @@ export function CatalogBrowser() {
 
 function CatalogSkeleton() {
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {Array.from({ length: 8 }, (_, i) => (
+    <div className="grid h-[calc(100vh-220px)] grid-cols-4 gap-4 overflow-hidden">
+      {Array.from({ length: 12 }, (_, i) => (
         <div key={i} className="h-[280px] animate-pulse rounded-[24px] bg-card" />
       ))}
     </div>
