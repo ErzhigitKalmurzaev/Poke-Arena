@@ -1,15 +1,15 @@
-export type FighterTone = 'amber' | 'blue' | 'mint';
+export type FighterTone = 'red' | 'blue' | 'mint';
 
 // Only 3 accents exist in the design system - every PokeAPI type maps onto
 // one of them (warm/aggressive, cool/defensive, or utility), never a 4th
 // color. Shared by every UI that colors a fighter by its element.
 const TYPE_TONE: Record<string, FighterTone> = {
-  fire: 'amber',
-  electric: 'amber',
-  fighting: 'amber',
-  dragon: 'amber',
-  ground: 'amber',
-  rock: 'amber',
+  fire: 'red',
+  electric: 'red',
+  fighting: 'red',
+  dragon: 'red',
+  ground: 'red',
+  rock: 'red',
   water: 'blue',
   ice: 'blue',
   flying: 'blue',
@@ -29,21 +29,21 @@ export function toneOfTypes(types: string[]): FighterTone {
 }
 
 export const TONE_BG: Record<FighterTone, string> = {
-  amber: 'bg-brand-amber',
+  red: 'bg-brand-red',
   blue: 'bg-brand-blue',
   mint: 'bg-brand-mint',
 };
 
 export const TONE_TEXT: Record<FighterTone, string> = {
-  amber: 'text-brand-amber',
+  red: 'text-brand-red',
   blue: 'text-brand-blue',
   mint: 'text-brand-mint',
 };
 
 export const TONE_HEX: Record<FighterTone, string> = {
-  amber: '#ffb444',
-  blue: '#addaee',
-  mint: '#b2ffe2',
+  red: '#d62828',
+  blue: '#1565c0',
+  mint: '#00897b',
 };
 
 export function toneRgba(tone: FighterTone, alpha: number): string {

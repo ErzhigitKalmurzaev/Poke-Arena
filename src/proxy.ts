@@ -2,11 +2,11 @@ import { auth } from '@/auth';
 
 /**
  * Next.js 16 renamed Middleware to Proxy (same runtime contract, new file
- * name/export). This is the app's auth guard: everything except / and
- * /login requires a session.
+ * name/export). This is the app's auth guard: everything except /, /login,
+ * and /register requires a session.
  */
 export default auth((req) => {
-  const isPublic = req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/login';
+  const isPublic = ['/', '/login', '/register'].includes(req.nextUrl.pathname);
   if (!req.auth && !isPublic) {
     return Response.redirect(new URL('/login', req.nextUrl));
   }

@@ -8,7 +8,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-heading);
-  --color-brand-amber: var(--brand-amber);
+  --color-brand-red: var(--brand-red);
   --color-brand-blue: var(--brand-blue);
   --color-brand-mint: var(--brand-mint);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -51,9 +51,13 @@
 
 /*
  * Arena ships a single, permanent dark theme lifted from the supplied
- * design system (surfaces #232323 on #000, amber/blue/mint accents).
+ * design system (surfaces #232323 on #000, red/blue/mint accents).
  * There is no light/dark toggle - that's the optional "dark theme" item
  * from the spec, and we deliberately did not pick it, see README.
+ *
+ * The red is a fixed reference point - a deep, muted "Poké Ball red"
+ * (#D62828) - so blue/mint were re-tuned to the same darker, less
+ * flashy depth instead of reading brighter than it.
  */
 :root {
   --background: #000000;
@@ -62,7 +66,7 @@
   --card-foreground: #ffffff;
   --popover: #232323;
   --popover-foreground: #ffffff;
-  --primary: #ffb444;
+  --primary: #d62828;
   --primary-foreground: #000000;
   --secondary: #232323;
   --secondary-foreground: #ffffff;
@@ -70,27 +74,27 @@
   --muted-foreground: rgba(255, 255, 255, 0.55);
   --accent: #2c2c2c;
   --accent-foreground: #ffffff;
-  --destructive: #ff6b6b;
+  --destructive: #d62828;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.08);
-  --ring: #addaee;
-  --chart-1: #ffb444;
-  --chart-2: #addaee;
-  --chart-3: #b2ffe2;
+  --ring: #1565c0;
+  --chart-1: #d62828;
+  --chart-2: #1565c0;
+  --chart-3: #00897b;
   --chart-4: rgba(255, 255, 255, 0.6);
   --chart-5: rgba(255, 255, 255, 0.35);
   --radius: 1rem;
   --sidebar: #232323;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ffb444;
+  --sidebar-primary: #d62828;
   --sidebar-primary-foreground: #000000;
   --sidebar-accent: #2c2c2c;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #addaee;
-  --brand-amber: #ffb444;
-  --brand-blue: #addaee;
-  --brand-mint: #b2ffe2;
+  --sidebar-ring: #1565c0;
+  --brand-red: #d62828;
+  --brand-blue: #1565c0;
+  --brand-mint: #00897b;
 }
 
 @layer base {

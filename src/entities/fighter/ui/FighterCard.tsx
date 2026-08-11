@@ -29,12 +29,12 @@ export function FighterCard({ fighter }: FighterCardProps) {
           <Image src={fighter.sprite} alt={fighter.name} width={96} height={96} className="object-contain" />
         )}
         {fighter.isEdited && (
-          <span className="absolute top-2.5 left-2.5 rounded-full bg-black px-2.5 py-1 font-mono text-[9px] tracking-[0.1em] text-brand-amber">
+          <span className="absolute top-2.5 left-2.5 rounded-full bg-black px-2.5 py-1 font-mono text-[9px] tracking-[0.1em] text-brand-red">
             ИЗМЕНЁН
           </span>
         )}
         {legendaryLabel && (
-          <span className="absolute top-2.5 right-2.5 rounded-full border border-brand-amber bg-black px-2.5 py-1 font-mono text-[9px] tracking-[0.1em] text-brand-amber">
+          <span className="absolute top-2.5 right-2.5 rounded-full border border-brand-red bg-black px-2.5 py-1 font-mono text-[9px] tracking-[0.1em] text-brand-red">
             {legendaryLabel}
           </span>
         )}

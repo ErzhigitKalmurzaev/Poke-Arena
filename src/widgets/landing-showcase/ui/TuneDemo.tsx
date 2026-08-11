@@ -9,7 +9,7 @@ const POINT_STEP = 6;
 const BAR_MAX = 220;
 
 const HISTORY_EXAMPLE = [
-  { pair: 'Команда A — Команда B', stat: 'СКОРОСТЬ', score: '4:2', className: 'text-brand-amber' },
+  { pair: 'Команда A — Команда B', stat: 'СКОРОСТЬ', score: '4:2', className: 'text-brand-red' },
   { pair: 'Команда A — Скамейка', stat: 'СП.АТАКА', score: '2:4', className: 'text-brand-blue' },
   { pair: 'Отряд 1 — Отряд 2', stat: 'ЗАЩИТА', score: '5:1', className: 'text-brand-mint' },
   { pair: 'Команда A — Команда B', stat: 'HP', score: '3:3', className: 'text-white' },
@@ -118,7 +118,7 @@ export function TuneDemo() {
               ПРИМЕР ВЁРСТКИ — ИСТОРИЯ БОЁВ ПОЯВИТСЯ В ПРИЛОЖЕНИИ
             </p>
           </div>
-          <a href="/login" className="block rounded-[38px] bg-brand-amber p-9 text-black">
+          <a href="/login" className="block rounded-[38px] bg-brand-red p-9 text-black">
             <div className="font-heading text-[42px] font-semibold" style={{ letterSpacing: '-.03em', lineHeight: 1 }}>
               Отряд ждёт капитана
             </div>

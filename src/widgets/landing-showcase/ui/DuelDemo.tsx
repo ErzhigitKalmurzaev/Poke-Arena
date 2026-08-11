@@ -45,7 +45,7 @@ export function DuelDemo() {
   } else if (winsA === winsB) {
     verdict = { text: `Ничья ${winsA}:${winsB} по параметру «${stat.label}». Смени параметр — исход изменится.`, className: 'bg-brand-mint text-black' };
   } else if (winsA > winsB) {
-    verdict = { text: `Команда A берёт бой ${winsA}:${winsB} по параметру «${stat.label}».`, className: 'bg-brand-amber text-black' };
+    verdict = { text: `Команда A берёт бой ${winsA}:${winsB} по параметру «${stat.label}».`, className: 'bg-brand-red text-black' };
   } else {
     verdict = { text: `Команда B берёт бой ${winsB}:${winsA} по параметру «${stat.label}».`, className: 'bg-brand-blue text-black' };
   }
@@ -54,7 +54,7 @@ export function DuelDemo() {
     <section id="duel" className="mx-auto max-w-[1560px] px-6 py-22 sm:px-11">
       <div className="grid grid-cols-1 items-start gap-11 lg:grid-cols-[390px_1fr]">
         <div className="lg:sticky lg:top-11">
-          <div className="font-mono text-[11px] tracking-[0.16em] text-brand-amber">ПОПРОБУЙ ПРЯМО ЗДЕСЬ</div>
+          <div className="font-mono text-[11px] tracking-[0.16em] text-brand-red">ПОПРОБУЙ ПРЯМО ЗДЕСЬ</div>
           <h2 className="mt-3.5 font-heading text-5xl font-semibold" style={{ letterSpacing: '-.035em', lineHeight: 1 }}>
             Бой — это
             <br />
@@ -82,14 +82,14 @@ export function DuelDemo() {
             type="button"
             onClick={() => setRan((r) => !r)}
             className={`mt-5.5 rounded-full px-8 py-4 text-[15px] font-semibold ${
-              ran ? 'bg-white/10 text-white' : 'bg-brand-amber text-black'
+              ran ? 'bg-white/10 text-white' : 'bg-brand-red text-black'
             }`}
           >
             {ran ? 'Сбросить бой' : 'Запустить бой'}
           </button>
           <div className="mt-7.5 flex gap-6.5">
             <div>
-              <div className="font-mono text-3xl font-semibold text-brand-amber">{ran ? winsA : 0}</div>
+              <div className="font-mono text-3xl font-semibold text-brand-red">{ran ? winsA : 0}</div>
               <div className="mt-1 text-xs text-white/45">раундов за команду A</div>
             </div>
             <div>
@@ -102,7 +102,7 @@ export function DuelDemo() {
         <div className="rounded-[34px] bg-card p-7.5">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2.5 font-heading text-[19px] font-semibold">
-              <span className="h-6.5 w-6.5 rounded-[9px] bg-brand-amber" />
+              <span className="h-6.5 w-6.5 rounded-[9px] bg-brand-red" />
               Команда A
             </span>
             <span className="font-mono text-[11px] tracking-[0.14em] text-white/42 uppercase">{stat.label}</span>
@@ -118,7 +118,7 @@ export function DuelDemo() {
                   <span className="min-w-26 font-heading text-[15px] font-semibold text-white/85 capitalize">{duel.a.name}</span>
                   <span
                     className="min-w-8 text-right font-mono text-sm font-semibold"
-                    style={{ color: duel.aWin ? 'var(--brand-amber)' : 'rgba(255,255,255,.42)' }}
+                    style={{ color: duel.aWin ? 'var(--brand-red)' : 'rgba(255,255,255,.42)' }}
                   >
                     {duel.aVal}
                   </span>
@@ -127,7 +127,7 @@ export function DuelDemo() {
                       className="h-full rounded-full transition-[width] duration-700"
                       style={{
                         width: `${duel.aPct}%`,
-                        background: duel.aWin ? 'var(--brand-amber)' : 'rgba(255,180,68,.3)',
+                        background: duel.aWin ? 'var(--brand-red)' : 'rgba(214,40,40,.3)',
                         transitionDelay: `${duel.delay}ms`,
                       }}
                     />

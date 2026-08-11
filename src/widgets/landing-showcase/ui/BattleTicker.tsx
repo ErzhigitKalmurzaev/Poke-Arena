@@ -8,8 +8,8 @@ const strongest = ROSTER.slice().sort((a, b) => b.total - a.total)[0]!;
 
 const FACTS: { text: string; tone: BrandTone }[] = [
   { text: `${TOTAL_FIGHTER_COUNT} бойцов в базе — данные PokeAPI`, tone: 'mint' },
-  { text: `Быстрее всех: ${top('speed').name} · СКОРОСТЬ ${top('speed').stats.speed}`, tone: 'amber' },
-  { text: `Лучшая атака: ${top('attack').name} · АТАКА ${top('attack').stats.attack}`, tone: 'amber' },
+  { text: `Быстрее всех: ${top('speed').name} · СКОРОСТЬ ${top('speed').stats.speed}`, tone: 'red' },
+  { text: `Лучшая атака: ${top('attack').name} · АТАКА ${top('attack').stats.attack}`, tone: 'red' },
   { text: `Лучшая защита: ${top('defense').name} · ЗАЩИТА ${top('defense').stats.defense}`, tone: 'blue' },
   { text: `Сильнее всех суммарно: ${strongest.name} · СУММА ${strongest.total}`, tone: 'mint' },
   { text: 'Двенадцать бойцов в драфте лендинга, остальные ждут в покедексе', tone: 'blue' },
