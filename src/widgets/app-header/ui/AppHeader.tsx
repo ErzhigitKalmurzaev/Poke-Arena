@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { auth } from '@/auth';
 import { Logo } from '@/shared/ui/logo';
 import { AppNav } from './AppNav';
+import { OfflineNotice } from './OfflineNotice';
 import { UserMenu } from './UserMenu';
 
 export async function AppHeader() {
@@ -31,6 +32,11 @@ export async function AppHeader() {
           {session?.user?.name && <UserMenu name={session.user.name} />}
         </div>
       </div>
+
+      {/* Below the bar, not inside it: the row height is a layout variable
+          (--app-header-h) that sticky offsets across the app are measured
+          against, and growing it would shift every one of them. */}
+      <OfflineNotice />
     </header>
   );
 }

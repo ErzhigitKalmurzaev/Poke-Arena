@@ -14,8 +14,11 @@ interface FighterMediaProps {
  * Sprite display for the fighter detail page: an optional shiny toggle
  * above the art and an optional cry play/pause button beside it - each
  * omitted entirely (not shown disabled) when the fighter has no shiny
- * sprite / no cry audio. Both are already in the static dataset, so
- * neither triggers a network request beyond the initial page load.
+ * sprite / no cry audio.
+ *
+ * Both URLs come from the static dataset, but the media itself is hosted on the
+ * PokeAPI sprite repo - so this is one of the few places in the app that needs
+ * the network at all (see the header's OfflineNotice).
  */
 export function FighterMedia({ fighter }: FighterMediaProps) {
   const [showShiny, setShowShiny] = useState(false);
