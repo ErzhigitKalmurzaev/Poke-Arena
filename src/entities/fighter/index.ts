@@ -1,7 +1,11 @@
 export type { Fighter } from './model/types';
 export type { FighterTone } from './model/tone';
-export { ALL_FIGHTER_TYPES, TONE_BG, TONE_HEX, TONE_TEXT, toneOfTypes, toneRgba } from './model/tone';
-export { battleStatTotal } from './model/battleStats';
+export { ALL_FIGHTER_TYPES, TONE_BG, TONE_HEX, TONE_TEXT, toneOfTypes, toneRgba, typeLabel } from './model/tone';
+export { BATTLE_STAT_KEYS, BATTLE_STAT_LABEL, MAX_BATTLE_STAT_TOTAL, battleStatTotal, type BattleStatKey } from './model/battleStats';
+export { TYPE_MATCHUPS, fighterMatchups } from './model/matchups';
+export { fighterRole, fighterStrengths, type FighterStrength } from './model/role';
+export { fighterMoves, type FighterMove } from './model/moves';
+export { fighterRating } from './model/rating';
 export { toComparableStats } from './model/comparableStats';
 export { getAllFighters, getBaseFighterById, getFighterById } from './api/fighterRepository';
 export { FighterCard } from './ui/FighterCard';

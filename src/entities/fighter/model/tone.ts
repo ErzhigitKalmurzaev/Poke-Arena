@@ -31,6 +31,37 @@ export function toneOfTypes(types: string[]): FighterTone {
 // The canonical list of PokeAPI types, in the same order as above.
 export const ALL_FIGHTER_TYPES: string[] = Object.keys(TYPE_TONE);
 
+/**
+ * Russian display names for PokeAPI's English type ids. The whole UI is in
+ * Russian, so raw `fighting`/`special-attack`-style ids shouldn't leak into
+ * filter chips or fighter cards; the id stays the value everywhere it's used
+ * as a key or a query param.
+ */
+const TYPE_LABEL: Record<string, string> = {
+  fire: 'Огонь',
+  electric: 'Электро',
+  fighting: 'Борьба',
+  dragon: 'Дракон',
+  ground: 'Земля',
+  rock: 'Камень',
+  water: 'Вода',
+  ice: 'Лёд',
+  flying: 'Полёт',
+  psychic: 'Психика',
+  steel: 'Сталь',
+  grass: 'Трава',
+  poison: 'Яд',
+  bug: 'Жук',
+  normal: 'Обычный',
+  fairy: 'Фея',
+  ghost: 'Призрак',
+  dark: 'Тьма',
+};
+
+export function typeLabel(type: string): string {
+  return TYPE_LABEL[type] ?? type;
+}
+
 export const TONE_BG: Record<FighterTone, string> = {
   red: 'bg-brand-red',
   blue: 'bg-brand-blue',

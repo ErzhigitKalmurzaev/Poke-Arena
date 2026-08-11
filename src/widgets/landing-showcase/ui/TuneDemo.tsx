@@ -31,7 +31,7 @@ export function TuneDemo() {
   };
 
   return (
-    <section id="tune" className="mx-auto max-w-[1560px] px-6 pb-22 sm:px-11">
+    <section id="tune" className="mx-auto w-full max-w-[1560px] px-6 pb-22 sm:px-11">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.08fr_1fr]">
         <div className="rounded-[38px] bg-brand-mint p-9 text-black sm:p-11">
           <div className="font-mono text-[11px] tracking-[0.16em] text-black/55">ПРОКАЧКА · ПОПРОБУЙ</div>

@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { FighterHeader, FighterMedia, getFighterById } from '@/entities/fighter';
+import { CustomStatAssignForm } from '@/features/custom-stat-create';
 import { FighterEditForm } from '@/features/fighter-edit';
 
 interface FighterDetailViewProps {
@@ -46,6 +47,7 @@ export function FighterDetailView({ id }: FighterDetailViewProps) {
           <FighterMedia fighter={fighter} />
           <FighterHeader fighter={fighter} />
           <FighterEditForm fighter={fighter} />
+          <CustomStatAssignForm fighterId={fighter.id} />
         </>
       )}
     </div>

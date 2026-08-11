@@ -13,7 +13,7 @@ export function ElementsExplorer() {
   const fighters = ROSTER.filter((f) => f.types.includes(type)).slice(0, 4);
 
   return (
-    <section id="elements" className="mx-auto max-w-[1560px] px-6 pb-22 sm:px-11">
+    <section id="elements" className="mx-auto w-full max-w-[1560px] px-6 pb-22 sm:px-11">
       <div className="rounded-[40px] bg-card p-9 sm:p-12">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from '@/shared/ui/logo';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,11 +11,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       />
 
       <header className="relative flex items-center px-6 py-5 sm:px-11">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid h-8.5 w-8.5 place-items-center rounded-xl bg-brand-red font-mono text-[13px] font-semibold text-black">
-            A
-          </span>
-          <span className="font-heading text-xl font-semibold">Arena</span>
+        <Link href="/" className="flex items-center rounded-full transition-opacity duration-200 hover:opacity-80">
+          <Logo />
         </Link>
       </header>
 

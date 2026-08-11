@@ -95,6 +95,21 @@
   --brand-red: #d62828;
   --brand-blue: #1565c0;
   --brand-mint: #00897b;
+  /*
+   * The sticky app header's exact height. Anything that has to sit below it
+   * and size itself against the remaining viewport (the catalog's own
+   * scrolling filter rail) derives from this instead of hardcoding a pixel
+   * guess that silently breaks when the header's padding changes.
+   */
+  --app-header-h: 4rem;
+}
+
+/* Unobtrusive scrollbar for in-page scroll regions (the filter rail), so a
+ * panel that scrolls independently doesn't announce itself with a chunky
+ * default bar. */
+@utility scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 
 @layer base {
@@ -106,6 +121,14 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Tailwind v4 Preflight dropped the old `button { cursor: pointer }` reset,
+   * so every clickable button/chip in the app fell back to the native
+   * default arrow cursor. Restore it once here instead of adding
+   * cursor-pointer to every button and chip individually. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
   }
 }
 

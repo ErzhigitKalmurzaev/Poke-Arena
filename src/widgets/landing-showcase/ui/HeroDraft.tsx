@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import { Logo } from '@/shared/ui/logo';
 import { ROSTER, STATS, TONE_BG, TONE_HEX, TOTAL_FIGHTER_COUNT, toneRgba, type RosterFighter } from '../model/roster';
 
 function barTone(value: number, toneHex: string): string {
@@ -14,11 +16,33 @@ function neighbor(index: number, offset: number): RosterFighter {
   return ROSTER[(index + offset + ROSTER.length) % ROSTER.length]!;
 }
 
+const SWITCH_EASE = [0.22, 1, 0.36, 1] as const;
+
+const CARD_VARIANTS = {
+  enter: (direction: number) => ({ x: direction >= 0 ? 36 : -36, opacity: 0, scale: 0.97 }),
+  center: { x: 0, opacity: 1, scale: 1 },
+  exit: (direction: number) => ({ x: direction >= 0 ? -36 : 36, opacity: 0, scale: 0.97 }),
+};
+
+const PANEL_VARIANTS = {
+  enter: { y: 10, opacity: 0 },
+  center: { y: 0, opacity: 1 },
+  exit: { y: -10, opacity: 0 },
+};
+
 export function HeroDraft() {
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [roster, setRoster] = useState<string[]>([]);
 
-  const step = (delta: number) => setIndex((i) => (i + delta + ROSTER.length) % ROSTER.length);
+  const step = (delta: number) => {
+    setDirection(delta);
+    setIndex((i) => (i + delta + ROSTER.length) % ROSTER.length);
+  };
+  const jumpTo = (fighter: RosterFighter, delta: number) => {
+    setDirection(delta);
+    setIndex(ROSTER.indexOf(fighter));
+  };
   const current = ROSTER[index]!;
   const inRoster = roster.includes(current.id);
   const full = roster.length >= 6;
@@ -72,24 +96,25 @@ export function HeroDraft() {
         className="absolute inset-0 transition-[background] duration-500"
         style={{ background: `radial-gradient(58% 62% at 50% 34%, ${toneRgba(current.tone, 0.24)}, transparent 72%)` }}
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-[26%] right-0 left-0 hidden text-center font-heading text-[230px] font-bold leading-none whitespace-nowrap text-transparent lg:block"
-        style={{ letterSpacing: '-.05em', WebkitTextStroke: '1px rgba(255,255,255,.11)' }}
-      >
-        {current.name.toUpperCase()}
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current.id}
+          aria-hidden
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, ease: SWITCH_EASE }}
+          className="pointer-events-none absolute top-[26%] right-0 left-0 hidden text-center font-heading text-[230px] font-bold leading-none whitespace-nowrap text-transparent lg:block"
+          style={{ letterSpacing: '-.05em', WebkitTextStroke: '1px rgba(255,255,255,.11)' }}
+        >
+          {current.name.toUpperCase()}
+        </motion.div>
+      </AnimatePresence>
 
       <header className="relative flex items-center gap-9 px-6 py-5 sm:px-11">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="grid h-8.5 w-8.5 place-items-center rounded-xl font-mono text-[13px] font-semibold text-black transition-colors duration-300"
-            style={{ background: toneHex }}
-          >
-            A
-          </span>
-          <span className="font-heading text-xl font-semibold">Arena</span>
-        </div>
+        {/* Same lockup as the app header, but the mark takes the tone of the
+            fighter currently on stage. */}
+        <Logo tone={toneHex} />
         <div className="flex items-center gap-2 font-mono text-[11px] tracking-[0.14em] text-white/45">
           <span className="h-1.5 w-1.5 rounded-full bg-brand-mint" />
           {TOTAL_FIGHTER_COUNT} БОЙЦОВ В БАЗЕ
@@ -122,7 +147,7 @@ export function HeroDraft() {
                 <button
                   key={`${sideFighter.id}-${position}`}
                   type="button"
-                  onClick={() => setIndex(ROSTER.indexOf(sideFighter))}
+                  onClick={() => jumpTo(sideFighter, position === 0 ? -1 : 1)}
                   className="overflow-hidden rounded-[22px] text-left transition-all duration-200 hover:translate-x-1.5"
                   style={{ background: TONE_HEX[sideFighter.tone], opacity: position === 0 ? 0.62 : 0.5 }}
                 >
@@ -139,68 +164,98 @@ export function HeroDraft() {
               ))}
             </div>
 
-            <div
-              className="relative overflow-hidden rounded-[34px] shadow-[0_50px_110px_rgba(0,0,0,0.66)] transition-[background] duration-500"
-              style={{ background: toneHex }}
-            >
-              <div className="relative grid h-[280px] place-items-center sm:h-[392px]">
-                <span className="absolute top-4.5 left-5 rounded-full bg-black/[0.14] px-3.5 py-1.5 font-mono text-[11px] text-black">
-                  #{current.id}
-                </span>
-                <span className="absolute top-4.5 right-5 rounded-full bg-black/[0.14] px-3.5 py-1.5 font-mono text-[11px] text-black">
-                  {current.role}
-                </span>
-                {current.sprite && (
-                  <Image src={current.sprite} alt={current.name} width={260} height={260} priority className="object-contain" />
-                )}
-              </div>
-              <div className="flex items-end justify-between gap-5 px-6 pb-6 text-black">
-                <div>
-                  <div className="font-heading text-4xl font-semibold sm:text-[44px] capitalize" style={{ letterSpacing: '-.03em' }}>
-                    {current.name}
-                  </div>
-                  <div className="mt-3 flex gap-1.5">
-                    {current.types.map((type) => (
-                      <span key={type} className="rounded-full bg-black/[0.14] px-3 py-1.5 font-mono text-[11px] uppercase">
-                        {type}
+            <div className="relative">
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -inset-3 rounded-[40px] blur-xl"
+                animate={{ backgroundColor: toneRgba(current.tone, 0.42) }}
+                transition={{ duration: 0.5, ease: SWITCH_EASE }}
+              />
+              <div
+                className="relative overflow-hidden rounded-[34px] shadow-[0_50px_110px_rgba(0,0,0,0.66)] transition-[background] duration-500"
+                style={{ background: toneHex }}
+              >
+                <AnimatePresence mode="wait" custom={direction} initial={false}>
+                  <motion.div
+                    key={current.id}
+                    custom={direction}
+                    variants={CARD_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.36, ease: SWITCH_EASE }}
+                  >
+                    <div className="relative grid h-[280px] place-items-center sm:h-[392px]">
+                      <span className="absolute top-4.5 left-5 rounded-full bg-black/[0.14] px-3.5 py-1.5 font-mono text-[11px] text-black">
+                        #{current.id}
                       </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono text-[11px] tracking-[0.12em] text-black/55">СУММА СТАТОВ</div>
-                  <div className="font-mono text-3xl font-semibold leading-tight sm:text-[34px]">{current.total}</div>
-                </div>
+                      <span className="absolute top-4.5 right-5 rounded-full bg-black/[0.14] px-3.5 py-1.5 font-mono text-[11px] text-black">
+                        {current.role}
+                      </span>
+                      {current.sprite && (
+                        <Image src={current.sprite} alt={current.name} width={260} height={260} priority className="object-contain" />
+                      )}
+                    </div>
+                    <div className="flex items-end justify-between gap-5 px-6 pb-6 text-black">
+                      <div>
+                        <div className="font-heading text-4xl font-semibold sm:text-[44px] capitalize" style={{ letterSpacing: '-.03em' }}>
+                          {current.name}
+                        </div>
+                        <div className="mt-3 flex gap-1.5">
+                          {current.types.map((type) => (
+                            <span key={type} className="rounded-full bg-black/[0.14] px-3 py-1.5 font-mono text-[11px] uppercase">
+                              {type}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-[11px] tracking-[0.12em] text-black/55">СУММА СТАТОВ</div>
+                        <div className="font-mono text-3xl font-semibold leading-tight sm:text-[34px]">{current.total}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
 
             <div className="flex flex-col gap-4.5">
-              <div className="rounded-[26px] bg-card p-5.5">
+              <div className="overflow-hidden rounded-[26px] bg-card p-5.5">
                 <div className="flex items-baseline justify-between">
                   <span className="font-mono text-[11px] tracking-[0.14em] text-white/45">ПАРАМЕТРЫ</span>
                   <span className="font-mono text-[11px] transition-colors duration-300" style={{ color: toneHex }}>
                     {current.role}
                   </span>
                 </div>
-                <div className="mt-4 flex flex-col gap-2.5">
-                  {STATS.map((stat) => {
-                    const value = current.stats[stat.key] ?? 0;
-                    return (
-                      <div key={stat.key}>
-                        <div className="flex justify-between font-mono text-[11.5px]">
-                          <span className="text-white/55">{stat.label}</span>
-                          <span className="font-semibold">{value}</span>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={current.id}
+                    variants={PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: SWITCH_EASE }}
+                    className="mt-4 flex flex-col gap-2.5"
+                  >
+                    {STATS.map((stat) => {
+                      const value = current.stats[stat.key] ?? 0;
+                      return (
+                        <div key={stat.key}>
+                          <div className="flex justify-between font-mono text-[11.5px]">
+                            <span className="text-white/55">{stat.label}</span>
+                            <span className="font-semibold">{value}</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 rounded-full bg-white/[0.08]">
+                            <div
+                              className="h-full rounded-full transition-[width,background] duration-500"
+                              style={{ width: `${Math.min(100, Math.round((value / 200) * 100))}%`, background: barTone(value, toneHex) }}
+                            />
+                          </div>
                         </div>
-                        <div className="mt-1.5 h-1.5 rounded-full bg-white/[0.08]">
-                          <div
-                            className="h-full rounded-full transition-[width,background] duration-500"
-                            style={{ width: `${Math.min(100, Math.round((value / 200) * 100))}%`, background: barTone(value, toneHex) }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </motion.div>
+                </AnimatePresence>
               </div>
               <button
                 type="button"

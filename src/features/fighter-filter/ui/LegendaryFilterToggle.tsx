@@ -7,9 +7,11 @@ interface LegendaryFilterToggleProps {
 
 export function LegendaryFilterToggle({ checked, onCheckedChange }: LegendaryFilterToggleProps) {
   return (
-    <label className="flex items-center gap-2.5 rounded-full bg-card px-4 py-2 text-sm text-white/75">
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    /* Negative margin lines the hover band up with the section header's, so
+       the whole rail hovers on one column. */
+    <label className="-mx-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl px-2 py-1.5 text-[13.5px] text-white/75 transition-colors select-none hover:bg-white/5 hover:text-white">
       Только легендарные и мифические
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </label>
   );
 }

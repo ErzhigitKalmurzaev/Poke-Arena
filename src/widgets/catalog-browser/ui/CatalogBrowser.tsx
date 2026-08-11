@@ -1,17 +1,29 @@
 'use client';
 
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useMemo, useRef } from 'react';
-import { BASE_STAT_REGISTRY } from '@/entities/stat';
-import { FighterCard, getAllFighters, type Fighter } from '@/entities/fighter';
-import { filterByLegendary, filterByStatRange, filterByTypes, statBounds, LegendaryFilterToggle, StatRangeFilter, TypeFilterChips } from '@/features/fighter-filter';
+import { useMemo } from 'react';
+import { FighterCard, getAllFighters } from '@/entities/fighter';
+import type { StatDefinition } from '@/entities/stat';
+import { getStatRegistry } from '@/entities/stat';
+import {
+  filterByLegendary,
+  filterByStatRange,
+  filterByTypes,
+  statBounds,
+  statBoundsFromFighters,
+  type StatRange,
+} from '@/features/fighter-filter';
 import { filterBySearch, useFighterSearch, SearchInput } from '@/features/fighter-search';
+import { useAutoPagination } from '../model/useAutoPagination';
 import { useCatalogFilters } from '../model/useCatalogFilters';
+import { FilterSidebar } from './FilterSidebar';
 
-const COLUMNS = 4;
-const ROW_HEIGHT = 296;
+// Capped at 4 columns: the container maxes out at 1560px, so a 5th column
+// only shaves each card down to ~230px and crowds the stat block. 4 gives
+// ~290px cards, which is what makes the grid read as composed rather than
+// crammed.
+const GRID_CLASS = 'grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 xl:grid-cols-4';
 
 export function CatalogBrowser() {
   const [filters, setFilters] = useCatalogFilters();
@@ -20,6 +32,9 @@ export function CatalogBrowser() {
     queryFn: getAllFighters,
     staleTime: Infinity,
   });
+  // Base stats plus whatever custom stats users have created - a fresh
+  // custom stat shows up as its own range filter without a code change.
+  const { data: statRegistry = [] } = useQuery({ queryKey: ['statRegistry'], queryFn: getStatRegistry });
 
   const { matchedIds, isPending } = useFighterSearch(filters.q);
 
@@ -34,24 +49,18 @@ export function CatalogBrowser() {
     return result;
   }, [fighters, matchedIds, filters.types, filters.legendary, filters.ranges]);
 
-  const rows = useMemo(() => {
-    const chunks: Fighter[][] = [];
-    for (let i = 0; i < filtered.length; i += COLUMNS) {
-      chunks.push(filtered.slice(i, i + COLUMNS));
-    }
-    return chunks;
-  }, [filtered]);
+  // Any change to the query/filters restarts paging from the first page.
+  const resetKey = `${filters.q}|${filters.types.join(',')}|${filters.legendary}|${JSON.stringify(filters.ranges)}`;
+  const { visibleCount, sentinelRef, hasMore } = useAutoPagination(filtered.length, resetKey);
+  const visible = filtered.slice(0, visibleCount);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 4,
-  });
+  // Base stat bounds come from the immutable static dataset; a custom stat
+  // has no place there, so its bounds come from whatever fighters are
+  // already loaded (sparse values default to 0, same as filterByStatRange).
+  const boundsFor = (stat: StatDefinition): StatRange =>
+    stat.source === 'base' ? statBounds(stat.id) : statBoundsFromFighters(fighters ?? [], stat.id);
 
-  const setStatRange = (statId: string, range: [number, number]) => {
-    const bounds = statBounds(statId);
+  const setStatRange = (statId: string, range: StatRange, bounds: StatRange) => {
     const nextRanges = { ...filters.ranges };
     if (range[0] === bounds[0] && range[1] === bounds[1]) {
       delete nextRanges[statId];
@@ -61,58 +70,56 @@ export function CatalogBrowser() {
     void setFilters({ ranges: nextRanges });
   };
 
+  const activeCount =
+    filters.types.length + (filters.legendary ? 1 : 0) + Object.keys(filters.ranges).length + (filters.q ? 1 : 0);
+
+  const resetFilters = () => void setFilters({ q: '', types: [], legendary: false, ranges: {} });
+
   return (
-    <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col gap-6 px-6 py-8 sm:px-11">
-      <div className="flex items-end justify-between gap-6">
-        <h1 className="font-heading text-5xl font-semibold" style={{ letterSpacing: '-.03em' }}>
-          Покедекс
-        </h1>
+    <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-6 py-7 sm:px-11">
+      {/* Title, result count and search share one baseline over a hairline
+          rule, so the page opens on a straight edge instead of three
+          differently-aligned blocks. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-b border-white/8 pb-5">
+        <div className="flex items-baseline gap-3">
+          <h1 className="font-heading text-[42px] leading-none font-semibold" style={{ letterSpacing: '-.03em' }}>
+            Покедекс
+          </h1>
+          <span className="rounded-full bg-white/6 px-2.5 py-1 font-mono text-[10.5px] tracking-[0.1em] text-white/45">
+            {isLoading ? 'ЗАГРУЗКА…' : `${filtered.length} ИЗ ${fighters?.length ?? 0}`}
+          </span>
+        </div>
         <SearchInput value={filters.q} onChange={(q) => void setFilters({ q })} isPending={isPending} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-        <aside className="flex flex-col gap-6">
-          <TypeFilterChips
-            selected={filters.types}
-            onToggle={(type) =>
-              void setFilters({
-                types: filters.types.includes(type) ? filters.types.filter((t) => t !== type) : [...filters.types, type],
-              })
-            }
-          />
-          <LegendaryFilterToggle checked={filters.legendary} onCheckedChange={(legendary) => void setFilters({ legendary })} />
-          <div className="flex flex-col gap-4 rounded-[24px] bg-card p-5">
-            <span className="font-mono text-[11px] tracking-[0.14em] text-white/45">ДИАПАЗОНЫ</span>
-            {BASE_STAT_REGISTRY.map((stat) => {
-              const [min, max] = statBounds(stat.id);
-              const value = filters.ranges[stat.id] ?? [min, max];
-              return (
-                <StatRangeFilter
-                  key={stat.id}
-                  label={stat.label.toUpperCase()}
-                  unit={stat.unit}
-                  min={min}
-                  max={max}
-                  value={value}
-                  onValueChange={(range) => setStatRange(stat.id, range)}
-                />
-              );
-            })}
-          </div>
-        </aside>
+      {/*
+        `items-start` so the filter panel is only as tall as its content
+        (stretched, it rendered as a mostly-empty box down to the max-height).
+        Sticky still has room to travel: a sticky grid item is positioned
+        within its *grid area*, which spans the full row set by the tall
+        fighter-grid column - not within its own height.
+      */}
+      <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[288px_1fr]">
+        <FilterSidebar
+          stats={statRegistry}
+          boundsFor={boundsFor}
+          selectedTypes={filters.types}
+          legendaryOnly={filters.legendary}
+          ranges={filters.ranges}
+          activeCount={activeCount}
+          onToggleType={(type) =>
+            void setFilters({
+              types: filters.types.includes(type) ? filters.types.filter((t) => t !== type) : [...filters.types, type],
+            })
+          }
+          onLegendaryChange={(legendary) => void setFilters({ legendary })}
+          onStatRange={setStatRange}
+          onReset={resetFilters}
+        />
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <div className="font-mono text-xs text-white/45">
-            {isLoading ? 'ЗАГРУЗКА…' : `НАЙДЕНО ${filtered.length} ИЗ ${fighters?.length ?? 0}`}
-          </div>
-
-          {/*
-            Every branch below shares this exact box (h-[calc(100vh-220px)])
-            so switching between loading/empty/error/loaded never shifts the
-            page - only what's inside the box changes.
-          */}
+        <div className="flex min-w-0 flex-col gap-5">
           {isError ? (
-            <div className="flex h-[calc(100vh-220px)] flex-col items-start gap-3 rounded-[22px] bg-card p-6 text-[15px] text-white/70">
+            <div className="flex flex-col items-start gap-3 rounded-3xl border border-white/8 bg-card/60 p-6 text-[15px] text-white/70">
               <p>Не получилось загрузить данные. Проверь соединение и обнови страницу.</p>
               <button type="button" onClick={() => void refetch()} className="font-semibold text-brand-red underline">
                 Повторить
@@ -121,27 +128,41 @@ export function CatalogBrowser() {
           ) : isLoading ? (
             <CatalogSkeleton />
           ) : filtered.length === 0 ? (
-            <div className="flex h-[calc(100vh-220px)] items-start rounded-[22px] bg-card p-6 text-[15px] text-white/70">
-              Под эти фильтры бойцов нет — ослабь диапазон.
+            <div className="flex flex-col items-start gap-3 rounded-3xl border border-white/8 bg-card/60 p-6 text-[15px] text-white/70">
+              <p>Под эти фильтры бойцов нет — ослабь диапазон.</p>
+              {activeCount > 0 && (
+                <button type="button" onClick={resetFilters} className="font-semibold text-brand-red underline">
+                  Сбросить фильтры
+                </button>
+              )}
             </div>
           ) : (
-            <div ref={scrollRef} className="h-[calc(100vh-220px)] overflow-y-auto">
-              <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-                {virtualizer.getVirtualItems().map((virtualRow) => (
-                  <div
-                    key={virtualRow.key}
-                    className="absolute top-0 left-0 grid w-full grid-cols-4 gap-4 pb-4"
-                    style={{ height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                  >
-                    {rows[virtualRow.index]?.map((fighter) => (
-                      <Link key={fighter.id} href={`/fighter/${fighter.id}`}>
-                        <FighterCard fighter={fighter} />
-                      </Link>
-                    ))}
-                  </div>
+            <>
+              <div className={GRID_CLASS}>
+                {visible.map((fighter) => (
+                  <Link key={fighter.id} href={`/fighter/${fighter.id}`} className="h-full rounded-3xl">
+                    <FighterCard fighter={fighter} />
+                  </Link>
                 ))}
               </div>
-            </div>
+
+              {/*
+                Sentinel + its own skeleton row: scrolling it into view loads
+                the next page, and the skeletons make the growth read as
+                loading rather than as a jump.
+              */}
+              {hasMore && (
+                <div ref={sentinelRef} className={GRID_CLASS} aria-hidden>
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <div key={i} className="h-[336px] animate-pulse rounded-3xl bg-card/50" />
+                  ))}
+                </div>
+              )}
+
+              <p className="pb-2 text-center font-mono text-[10.5px] tracking-[0.14em] text-white/35">
+                {hasMore ? `ЗАГРУЖЕНО ${visible.length} ИЗ ${filtered.length}` : `ВСЕ ${filtered.length} ПОКАЗАНЫ`}
+              </p>
+            </>
           )}
         </div>
       </div>
@@ -151,9 +172,9 @@ export function CatalogBrowser() {
 
 function CatalogSkeleton() {
   return (
-    <div className="grid h-[calc(100vh-220px)] grid-cols-4 gap-4 overflow-hidden">
+    <div className={GRID_CLASS}>
       {Array.from({ length: 12 }, (_, i) => (
-        <div key={i} className="h-[280px] animate-pulse rounded-[24px] bg-card" />
+        <div key={i} className="h-[336px] animate-pulse rounded-3xl bg-card/50" />
       ))}
     </div>
   );

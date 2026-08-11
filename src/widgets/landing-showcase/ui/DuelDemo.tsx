@@ -1,10 +1,34 @@
 'use client';
 
+import { Heart, Shield, ShieldHalf, Sparkles, Swords, Zap } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useState } from 'react';
 import { ROSTER, STATS } from '../model/roster';
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 const TEAM_A = ROSTER.slice(0, 6);
 const TEAM_B = ROSTER.slice(6, 12);
+
+const STAT_ICONS: Record<string, typeof Heart> = {
+  hp: Heart,
+  attack: Swords,
+  defense: Shield,
+  'special-attack': Sparkles,
+  'special-defense': ShieldHalf,
+  speed: Zap,
+};
+
+// Chips need short labels to stay compact - the full label (e.g. "СП.ЗАЩИТА")
+// is still used everywhere else (verdict sentence, params panel).
+const STAT_SHORT_LABEL: Record<string, string> = {
+  hp: 'HP',
+  attack: 'АТК',
+  defense: 'ЗАЩ',
+  'special-attack': 'СП.А',
+  'special-defense': 'СП.З',
+  speed: 'СКР',
+};
 
 export function DuelDemo() {
   const [statKey, setStatKey] = useState('speed');
@@ -32,6 +56,9 @@ export function DuelDemo() {
 
   const winsA = duels.filter((d) => d.aWin).length;
   const winsB = duels.length - winsA;
+  const totalWins = winsA + winsB;
+  const aSharePct = ran && totalWins > 0 ? (winsA / totalWins) * 100 : 50;
+  const bSharePct = 100 - aSharePct;
 
   const selectStat = (key: string) => {
     setRan(false);
@@ -51,37 +78,61 @@ export function DuelDemo() {
   }
 
   return (
-    <section id="duel" className="mx-auto max-w-[1560px] px-6 py-22 sm:px-11">
-      <div className="grid grid-cols-1 items-start gap-11 lg:grid-cols-[390px_1fr]">
+    <section id="duel" className="mx-auto w-full max-w-[1560px] px-6 py-22 sm:px-11">
+      <div className="mx-auto grid max-w-[1180px] grid-cols-1 items-start gap-11 lg:grid-cols-[360px_1fr]">
         <div className="lg:sticky lg:top-11">
-          <div className="font-mono text-[11px] tracking-[0.16em] text-brand-red">ПОПРОБУЙ ПРЯМО ЗДЕСЬ</div>
-          <h2 className="mt-3.5 font-heading text-5xl font-semibold" style={{ letterSpacing: '-.035em', lineHeight: 1 }}>
-            Бой — это
-            <br />
-            честное сравнение
-          </h2>
+          <div className="relative">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-9 -left-8 -z-10 h-40 w-40 rounded-full bg-brand-red/25 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute top-1 left-24 -z-10 h-36 w-36 rounded-full bg-brand-blue/25 blur-3xl"
+            />
+            <div className="font-mono text-[11px] tracking-[0.16em] text-brand-red">ПОПРОБУЙ ПРЯМО ЗДЕСЬ</div>
+            <h2 className="mt-3.5 font-heading text-5xl font-semibold" style={{ letterSpacing: '-.035em', lineHeight: 1 }}>
+              Бой — это
+              <br />
+              честное сравнение
+            </h2>
+          </div>
           <p className="mt-4.5 text-[15.5px] leading-relaxed text-white/60">
             Выбирай параметр, жми «Запустить» и смотри, как шесть пар расходятся по раундам. Никаких скрытых
             коэффициентов — каждое число на экране.
           </p>
-          <div className="mt-6.5 flex flex-wrap gap-2">
-            {STATS.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => selectStat(s.key)}
-                className={`rounded-full px-4.5 py-2.5 font-mono text-[11.5px] font-medium transition-colors duration-200 ${
-                  s.key === statKey ? 'bg-white text-black' : 'bg-white/8 text-white/72'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="mt-6.5 flex flex-wrap gap-1.5">
+            {STATS.map((s) => {
+              const Icon = STAT_ICONS[s.key];
+              const active = s.key === statKey;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => selectStat(s.key)}
+                  aria-pressed={active}
+                  title={s.label}
+                  className={`relative flex items-center gap-1.5 overflow-hidden rounded-full py-2 pr-3.5 pl-2.5 font-mono text-[11px] font-medium transition-colors duration-200 ${
+                    active ? 'text-black' : 'bg-white/8 text-white/68 hover:text-white/90'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="duel-stat-pill"
+                      className="absolute inset-0 rounded-full bg-white"
+                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  {Icon && <Icon className="relative h-3.5 w-3.5" />}
+                  <span className="relative">{STAT_SHORT_LABEL[s.key] ?? s.label}</span>
+                </button>
+              );
+            })}
           </div>
           <button
             type="button"
             onClick={() => setRan((r) => !r)}
-            className={`mt-5.5 rounded-full px-8 py-4 text-[15px] font-semibold ${
+            className={`mt-5.5 rounded-full px-8 py-4 text-[15px] font-semibold transition-colors duration-200 ${
               ran ? 'bg-white/10 text-white' : 'bg-brand-red text-black'
             }`}
           >
@@ -97,21 +148,40 @@ export function DuelDemo() {
               <div className="mt-1 text-xs text-white/45">раундов за команду B</div>
             </div>
           </div>
+          <div className="mt-4 flex h-2 w-full overflow-hidden rounded-full bg-white/8">
+            <motion.div
+              className="h-full bg-brand-red"
+              animate={{ width: `${aSharePct}%` }}
+              transition={{ duration: 0.6, ease: EASE }}
+            />
+            <motion.div
+              className="h-full bg-brand-blue"
+              animate={{ width: `${bSharePct}%` }}
+              transition={{ duration: 0.6, ease: EASE }}
+            />
+          </div>
         </div>
 
-        <div className="rounded-[34px] bg-card p-7.5">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2.5 font-heading text-[19px] font-semibold">
-              <span className="h-6.5 w-6.5 rounded-[9px] bg-brand-red" />
+        <div
+          className="rounded-[34px] p-7.5"
+          style={{
+            background: 'linear-gradient(120deg, rgba(214,40,40,0.14), rgba(35,35,35,1) 35%, rgba(35,35,35,1) 65%, rgba(21,101,192,0.14))',
+          }}
+        >
+          <div className="grid grid-cols-[1fr_112px_1fr] items-center gap-4 rounded-[20px] bg-black/50 px-4 py-3.5">
+            <span className="flex w-40 shrink-0 items-center gap-2.5 font-heading text-[19px] font-semibold">
+              <span className="h-6.5 w-6.5 shrink-0 rounded-[9px] bg-brand-red" />
               Команда A
             </span>
-            <span className="font-mono text-[11px] tracking-[0.14em] text-white/42 uppercase">{stat.label}</span>
-            <span className="flex items-center gap-2.5 font-heading text-[19px] font-semibold">
+            <span className="min-w-0 truncate text-center font-mono text-[11px] tracking-[0.14em] text-white/42 uppercase">
+              {stat.label}
+            </span>
+            <span className="flex w-40 shrink-0 items-center justify-end justify-self-end gap-2.5 text-right font-heading text-[19px] font-semibold">
               Команда B
-              <span className="h-6.5 w-6.5 rounded-[9px] bg-brand-blue" />
+              <span className="h-6.5 w-6.5 shrink-0 rounded-[9px] bg-brand-blue" />
             </span>
           </div>
-          <div className="mt-6 flex flex-col gap-2.5">
+          <div className="mt-3 flex flex-col gap-2.5">
             {duels.map((duel, i) => (
               <div key={i} className="grid grid-cols-[1fr_112px_1fr] items-center gap-4 rounded-[20px] bg-black px-4 py-3">
                 <div className="flex items-center gap-2.5">
@@ -158,7 +228,9 @@ export function DuelDemo() {
               </div>
             ))}
           </div>
-          <div className={`mt-5.5 rounded-[22px] px-5.5 py-4.5 text-[15px] font-semibold transition-colors duration-300 ${verdict.className}`}>
+          <div
+            className={`mt-5.5 rounded-[22px] px-5.5 py-4.5 text-center text-[15px] font-semibold transition-colors duration-300 ${verdict.className}`}
+          >
             {verdict.text}
           </div>
         </div>
