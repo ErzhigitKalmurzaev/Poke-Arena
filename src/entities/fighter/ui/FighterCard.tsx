@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { memo } from 'react';
 import { MAX_BATTLE_STAT_TOTAL, battleStatTotal } from '../model/battleStats';
 import { fighterRating } from '../model/rating';
 import { TONE_HEX, toneOfTypes, typeLabel } from '../model/tone';
@@ -18,7 +19,14 @@ const STAT_CELLS: [string, string][] = [
   ['speed', 'СКР'],
 ];
 
-export function FighterCard({ fighter }: FighterCardProps) {
+/**
+ * Memoized, and it matters at catalog scale: loading another page of results
+ * re-renders the grid, and without this every card already on screen (up to
+ * ~1300 of them) would re-run its rating/total maths and rebuild its subtree
+ * for nothing. A Fighter object only changes identity when the roster query
+ * refetches, which is exactly when a card *should* redraw.
+ */
+export const FighterCard = memo(function FighterCard({ fighter }: FighterCardProps) {
   const tone = toneOfTypes(fighter.types);
   const accent = TONE_HEX[tone];
   const total = battleStatTotal(fighter.stats);
@@ -105,4 +113,4 @@ export function FighterCard({ fighter }: FighterCardProps) {
       </div>
     </article>
   );
-}
+});

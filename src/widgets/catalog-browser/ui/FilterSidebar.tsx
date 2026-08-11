@@ -1,6 +1,7 @@
 'use client';
 
 import { RotateCcw } from 'lucide-react';
+import { memo } from 'react';
 import type { StatDefinition } from '@/entities/stat';
 import { LegendaryFilterToggle, StatRangeFilter, TypeFilterChips, type StatRange } from '@/features/fighter-filter';
 import type { StatRanges } from '../model/statRangesParser';
@@ -19,7 +20,13 @@ interface FilterSidebarProps {
   onReset: () => void;
 }
 
-export function FilterSidebar({
+/**
+ * Memoized: none of this depends on how far the fighter grid has been paged,
+ * yet it holds ten range sliders that would otherwise re-render (and re-measure
+ * their bounds) on every scroll-triggered page load. Every callback prop the
+ * catalog passes in is stabilized with useCallback for this reason.
+ */
+export const FilterSidebar = memo(function FilterSidebar({
   stats,
   boundsFor,
   selectedTypes,
@@ -97,4 +104,4 @@ export function FilterSidebar({
       </div>
     </aside>
   );
-}
+});

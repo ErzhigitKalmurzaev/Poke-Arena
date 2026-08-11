@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FighterCard, getAllFighters } from '@/entities/fighter';
 import type { StatDefinition } from '@/entities/stat';
 import { getStatRegistry } from '@/entities/stat';
@@ -54,26 +54,67 @@ export function CatalogBrowser() {
   const { visibleCount, sentinelRef, hasMore } = useAutoPagination(filtered.length, resetKey);
   const visible = filtered.slice(0, visibleCount);
 
-  // Base stat bounds come from the immutable static dataset; a custom stat
-  // has no place there, so its bounds come from whatever fighters are
-  // already loaded (sparse values default to 0, same as filterByStatRange).
-  const boundsFor = (stat: StatDefinition): StatRange =>
-    stat.source === 'base' ? statBounds(stat.id) : statBoundsFromFighters(fighters ?? [], stat.id);
-
-  const setStatRange = (statId: string, range: StatRange, bounds: StatRange) => {
-    const nextRanges = { ...filters.ranges };
-    if (range[0] === bounds[0] && range[1] === bounds[1]) {
-      delete nextRanges[statId];
-    } else {
-      nextRanges[statId] = range;
+  /*
+   * A custom stat has no place in the static dataset, so its slider bounds
+   * have to be measured across the loaded roster (sparse values default to 0,
+   * same as filterByStatRange). That's a full pass per custom stat, so all of
+   * them are measured once here rather than on every sidebar render - base
+   * stats need no such table, statBounds already memoizes them against the
+   * immutable snapshot.
+   */
+  const customBounds = useMemo(() => {
+    const bounds = new Map<string, StatRange>();
+    for (const stat of statRegistry) {
+      if (stat.source === 'custom') bounds.set(stat.id, statBoundsFromFighters(fighters ?? [], stat.id));
     }
-    void setFilters({ ranges: nextRanges });
-  };
+    return bounds;
+  }, [statRegistry, fighters]);
+
+  const boundsFor = useCallback(
+    (stat: StatDefinition): StatRange =>
+      stat.source === 'base' ? statBounds(stat.id) : (customBounds.get(stat.id) ?? [0, 0]),
+    [customBounds],
+  );
+
+  /*
+   * Every handler below is stable for as long as the state it closes over is,
+   * which is what lets FilterSidebar (a memo component holding ten range
+   * sliders) sit out the re-renders auto-pagination fires while scrolling.
+   */
+  const setStatRange = useCallback(
+    (statId: string, range: StatRange, bounds: StatRange) => {
+      const nextRanges = { ...filters.ranges };
+      // A range covering the full bounds isn't a filter - dropping the key
+      // keeps it out of the URL and out of the active count.
+      if (range[0] === bounds[0] && range[1] === bounds[1]) {
+        delete nextRanges[statId];
+      } else {
+        nextRanges[statId] = range;
+      }
+      void setFilters({ ranges: nextRanges });
+    },
+    [filters.ranges, setFilters],
+  );
+
+  const toggleType = useCallback(
+    (type: string) =>
+      void setFilters({
+        types: filters.types.includes(type) ? filters.types.filter((t) => t !== type) : [...filters.types, type],
+      }),
+    [filters.types, setFilters],
+  );
+
+  const setLegendary = useCallback((legendary: boolean) => void setFilters({ legendary }), [setFilters]);
+
+  const setQuery = useCallback((q: string) => void setFilters({ q }), [setFilters]);
 
   const activeCount =
     filters.types.length + (filters.legendary ? 1 : 0) + Object.keys(filters.ranges).length + (filters.q ? 1 : 0);
 
-  const resetFilters = () => void setFilters({ q: '', types: [], legendary: false, ranges: {} });
+  const resetFilters = useCallback(
+    () => void setFilters({ q: '', types: [], legendary: false, ranges: {} }),
+    [setFilters],
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col px-6 py-7 sm:px-11">
@@ -89,7 +130,7 @@ export function CatalogBrowser() {
             {isLoading ? 'ЗАГРУЗКА…' : `${filtered.length} ИЗ ${fighters?.length ?? 0}`}
           </span>
         </div>
-        <SearchInput value={filters.q} onChange={(q) => void setFilters({ q })} isPending={isPending} />
+        <SearchInput value={filters.q} onChange={setQuery} isPending={isPending} />
       </div>
 
       {/*
@@ -107,12 +148,8 @@ export function CatalogBrowser() {
           legendaryOnly={filters.legendary}
           ranges={filters.ranges}
           activeCount={activeCount}
-          onToggleType={(type) =>
-            void setFilters({
-              types: filters.types.includes(type) ? filters.types.filter((t) => t !== type) : [...filters.types, type],
-            })
-          }
-          onLegendaryChange={(legendary) => void setFilters({ legendary })}
+          onToggleType={toggleType}
+          onLegendaryChange={setLegendary}
           onStatRange={setStatRange}
           onReset={resetFilters}
         />
