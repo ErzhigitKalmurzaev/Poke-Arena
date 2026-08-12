@@ -240,11 +240,6 @@ export function BattleResultView() {
         </div>
       </div>
 
-      {/*
-        The numbers behind the verdict, once the playback is done. Held back
-        until then on purpose: the table gives away every round's result, and
-        showing it during the animation would spoil the fight it's explaining.
-      */}
       {isFinished && explanation && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -268,13 +263,6 @@ export function BattleResultView() {
   );
 }
 
-/**
- * Mirrors the loaded screen block for block - same paddings, same header rule,
- * same three-column grid at the same widths - so the teams arriving from Dexie
- * swaps grey boxes for content in place instead of reflowing the page under
- * the user. The single tall box this replaced was ~420px against a screen twice
- * that height, which shifted everything below it on load.
- */
 function BattleSkeleton() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-6 py-7 sm:px-11">

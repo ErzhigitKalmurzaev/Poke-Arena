@@ -52,6 +52,21 @@ bun run lint    # eslint
 `VERCEL`, и он упадёт с `UntrustedHost` при полностью корректном секрете: для проверки
 прод-сборки на localhost нужен ещё `AUTH_TRUST_HOST=true`.
 
+**`next build --webpack` вместо Turbopack.** В Next.js 16 у `next build` без флагов Turbopack
+— умолчание (`lib/bundler.js`: `bundlerFlags.size === 0` → `return Bundler.Turbopack`), и
+локально с этим датасетом всё собиралось без единой жалобы. На Vercel та же сборка (тот же
+`next`, тот же `bun.lock`) падала на шрифтах:
+`Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` —
+виртуальный модуль, который резолвит сам Rust-загрузчик Turbopack для `next/font/google`, а
+не обычная npm-зависимость (`@vercel/turbopack-next` не существует ни в одном `node_modules`
+ни локально, ни где-либо ещё — искать его как пакет незачем). Известное расхождение между
+Turbopack и укладкой `node_modules`, которую делает Bun, конкретно для этого загрузчика:
+резолвится там, где раскладка ближе к npm/pnpm, и не резолвится на Bun-инсталле, каким Vercel
+ставит зависимости по `bun.lock`. Проверено: та же сборка с `--webpack` (флаг из `next build
+--help`, никаких дополнительных пакетов) проходит и локально, и это ровно то, что теперь
+запускает `bun run build`. `next dev` Turbopack не трогает — там же самого класса шрифтов и
+самого лоадера, но эффект не воспроизводился ни разу, а откатывать хочется минимально.
+
 Датасет `public/data/pokemon.json` уже закоммитен и используется как есть. Пересобрать его
 из PokeAPI (не требуется для обычной работы):
 
